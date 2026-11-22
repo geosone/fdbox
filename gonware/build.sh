@@ -62,10 +62,17 @@ sh "$cc" "$arch" "$sysroot" "$output" \
 	src/lib/readline.c \
 	src/lib/strextra.c \
 	src/main.c \
+	src/unix/basename.c \
 	src/unix/cal.c \
+	src/unix/dirname.c \
 	src/unix/head.c \
 	src/unix/hexdump.c \
+	src/unix/pwd.c \
+	src/unix/sort.c \
 	src/unix/tail.c \
+	src/unix/touch.c \
+	src/unix/uniq.c \
+	src/unix/wc.c \
 	src/lib/gonware/glob.c \
 	$extra \
 	-- -Isrc/lib/gonware -Isrc -D_GNU_SOURCE -D_POSIX_C_SOURCE=200809L -D__GONWARE__ \
