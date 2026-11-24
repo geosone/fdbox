@@ -183,17 +183,32 @@ static long gdos_bare(const char *name, int argc, char *argv[], char *path, size
         return -GDOS_ENOENT;
 }
 
-/* runs the file found for argv[0]; its status, -1 when there is none */
-static int command_run(int argc, char *argv[]) {
+/* runs the file found for argv[0]; its status, -1 when there is none. A
+ * batch file gets argv (its parameters split at "=" too, as in DOS), a
+ * program or GLM the words of line as written (command_args_split_words:
+ * "RATE=20" stays one argument). */
+static int command_run(int argc, char *argv[], const char *line) {
         char path[260];
         long r;
+        struct command_args words;
 
-        if (command_find(argv[0], path, sizeof(path))) {
-                if (has_ext(path, ".btm") || has_ext(path, ".bat"))
-                        return batch_run(path, argc, argv);
-                r = gdos_start(path, argc, argv);
-        } else if ((r = gdos_bare(argv[0], argc, argv, path, sizeof(path))) == -GDOS_ENOENT)
+        if (command_find(argv[0], path, sizeof(path)) &&
+            (has_ext(path, ".btm") || has_ext(path, ".bat"))) {
+                return batch_run(path, argc, argv);
+        }
+        command_args_split_words(line, &words);
+        if (words.argc == 0) {
+                command_args_free(&words);
                 return -1;
+        }
+        if (command_find(words.argv[0], path, sizeof(path))) {
+                r = gdos_start(path, (int)words.argc, words.argv);
+        } else if ((r = gdos_bare(words.argv[0], (int)words.argc, words.argv, path,
+                                  sizeof(path))) == -GDOS_ENOENT) {
+                command_args_free(&words);
+                return -1;
+        }
+        command_args_free(&words);
         if (r == -GDOS_EPERM) {
                 fprintf(stderr, _("%s is a driver: LOAD %s, if you mean it\n"), path, argv[0]);
                 return 1;
@@ -313,7 +328,7 @@ static int execute_command(const char *line) {
                 int err;
 #if defined(__GONWARE__)
                 readline_deinit();
-                err = command_run(args.argc, args.argv);
+                err = command_run(args.argc, args.argv, line);
                 readline_init();
                 if (err == -1) {
                         fprintf(stderr, _("Bad command or file name - %s\n"), args.argv[0]);

@@ -218,6 +218,52 @@ void command_args_free(struct command_args *args) {
         args->max_args = 0;
 }
 
+/* The words of a line as a program gets them (a C runtime's argv): split
+ * at white space only, quotes group words and are removed. Unlike
+ * command_args_split, "=" stays in the word: "MODE CON RATE=20" gives
+ * three words, as DOS programs see them. */
+int command_args_split_words(const char *line, struct command_args *args) {
+        char word[256];
+        size_t wordlen = 0;
+        const char *c = line;
+        char quote = 0;
+        bool in_word = false;
+
+        memset(args, 0, sizeof(struct command_args));
+        command_args_allocate(args, 8);
+        for (;; c++) {
+                if (*c == 0 || (quote == 0 && isspace((unsigned char)*c))) {
+                        if (in_word) {
+                                word[wordlen] = '\0';
+                                if (args->argc + 2 > args->max_args) {
+                                        command_args_allocate(args, args->max_args + 8);
+                                }
+                                args->argv[args->argc] = strdup(word);
+                                args->argc++;
+                                wordlen = 0;
+                                in_word = false;
+                        }
+                        if (*c == 0) {
+                                break;
+                        }
+                        continue;
+                }
+                in_word = true;
+                if (quote == 0 && (*c == '"' || *c == '\'')) {
+                        quote = *c;
+                        continue;
+                }
+                if (quote != 0 && *c == quote) {
+                        quote = 0;
+                        continue;
+                }
+                if (wordlen < sizeof(word) - 1) {
+                        word[wordlen++] = *c;
+                }
+        }
+        return EXIT_SUCCESS;
+}
+
 /* More advanced arguments split. Supports
  *  - quoting
  *  - non-srparated agrs (WIP)
