@@ -103,44 +103,75 @@ int read_char() {
 }
 
 #elif defined(_POSIX_C_SOURCE) || defined(__APPLE__)
+/*
+ * A key from a terminal. A sequence is read to its end, so one with
+ * modifiers (Shift-Up ESC [ 1 ; 2 A, Ctrl-Del ESC [ 3 ; 5 ~), a mouse
+ * report (ESC [ < 0 ; 1 ; 1 M) or a key with Alt (ESC x) leaves nothing
+ * behind; those of no use here give 0.
+ */
 int read_char() {
-        int i = getchar();
+        int i, num, first, final;
+
+        i = getchar();
         switch (i) {
         case '\033':
                 i = getchar();
-                if (i == '[') {
+                if (i == 'O') { /* ESC O P, ESC O H */
                         i = getchar();
-                        switch (i) {
-                        case 'A':
-                                return KEY_ARROW_UP;
-                        case 'B':
-                                return KEY_ARROW_DOWN;
-                        case 'C':
-                                return KEY_ARROW_RIGHT;
-                        case 'D':
-                                return KEY_ARROW_LEFT;
-                        case 'H':
+                        if (i == 'H') {
                                 return KEY_HOME;
-                        case 'F':
+                        }
+                        if (i == 'F') {
                                 return KEY_END;
-                        case '2':
-                                i = getchar();
-                                if (i == 126) {
-                                        return KEY_INS;
-                                } else {
-                                        return 0;
+                        }
+                        return 0;
+                }
+                if (i != '[') {
+                        return 0; /* Alt and a key */
+                }
+                /* the parameters, then the final byte; num is the first */
+                num = 0;
+                first = 1;
+                final = getchar();
+                while (final >= 0x30 && final <= 0x3f) {
+                        if (final >= '0' && final <= '9') {
+                                if (first) {
+                                        num = num * 10 + final - '0';
                                 }
-                        case '3': /* ESC [ 3 ~ and so on */
-                                getchar();
+                        } else {
+                                first = 0;
+                        }
+                        final = getchar();
+                }
+                switch (final) {
+                case 'A':
+                        return KEY_ARROW_UP;
+                case 'B':
+                        return KEY_ARROW_DOWN;
+                case 'C':
+                        return KEY_ARROW_RIGHT;
+                case 'D':
+                        return KEY_ARROW_LEFT;
+                case 'H':
+                        return KEY_HOME;
+                case 'F':
+                        return KEY_END;
+                case '~':
+                        switch (num) {
+                        case 1:
+                        case 7:
+                                return KEY_HOME;
+                        case 4:
+                        case 8:
+                                return KEY_END;
+                        case 2:
+                                return KEY_INS;
+                        case 3:
                                 return KEY_DEL;
-                        case '5':
-                                getchar();
+                        case 5:
                                 return KEY_PGUP;
-                        case '6':
-                                getchar();
+                        case 6:
                                 return KEY_PGDOWN;
-                        default:
-                                printf("read escape code: %d\n", i);
                         }
                 }
                 return 0;
@@ -528,8 +559,9 @@ int readline(struct readline_session *session) {
                         clear_screen();
                         return 0;
                 default:
-                        if (c < 0 || c > 0xff || (READLINE_UTF8 && (c & 0xc0) == 0x80)) {
-                                break; /* a key without a character, a stray UTF-8 byte */
+                        if (c <= 0 || c > 0xff || (READLINE_UTF8 && (c & 0xc0) == 0x80)) {
+                                break; /* a key without a character (0: one of no use), a stray
+                                          UTF-8 byte */
                         }
                         /* a whole character: its UTF-8 bytes */
                         seq[0] = (char)c;
