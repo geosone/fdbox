@@ -3,12 +3,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <sys/stat.h>
 #include "dos/del.h"
 #include "fdbox.h"
 #include "lib/args.h"
-#include "lib/strextra.h"
 #include "lib/nls.h"
+#include "lib/strextra.h"
+#include <sys/stat.h>
 
 /*
 This file is part of fdbox
@@ -97,7 +97,8 @@ int command_del(int argc, char *argv[]) {
                         if (total_files == total_deleted_files) {
                                 printf(_("Deleted %d files\n"), total_files);
                         } else {
-                                printf(_("Deleted %d/%d files\n"), total_deleted_files, total_files);
+                                printf(_("Deleted %d/%d files\n"), total_deleted_files,
+                                       total_files);
                         }
                 }
                 if (total_dirs != 0) {
@@ -210,8 +211,8 @@ static deletion_result del_dir(struct del_config *config, const char *file_name,
 
         fname[0] = 0;
         strcat(fname, file_name);
-        stat(file_name, &st);
-        if (S_ISDIR(st.st_mode)) {
+        /* only a path that is there can be a directory (st is not filled otherwise) */
+        if (stat(file_name, &st) == 0 && S_ISDIR(st.st_mode)) {
                 if (!str_ends_with(file_name, '/') && !str_ends_with(file_name, '\\')) {
                         strcat(fname, DIRECTORY_DELIMITER);
                 }
@@ -222,8 +223,7 @@ static deletion_result del_dir(struct del_config *config, const char *file_name,
         glob(fname, GLOB_DOOFFS, NULL, &globbuf);
         for (j = 0; j != globbuf.gl_pathc; j++) {
                 const char *name = globbuf.gl_pathv[j];
-                stat(name, &st);
-                if (S_ISDIR(st.st_mode)) {
+                if (stat(name, &st) == 0 && S_ISDIR(st.st_mode)) {
                         result = del_dir(config, name, deleted_file_count, found_file_count,
                                          deleted_dirs_count, found_dirs_count);
                 } else {

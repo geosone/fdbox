@@ -27,12 +27,12 @@ https://github.com/tproffen/DiffuseCode/blob/master/lib_f90/win32-glob.c
 #include <string.h>
 #include <time.h>
 
-#include <sys/stat.h>
 #include "dos/cmd_dir.h"
 #include "fdbox.h"
 #include "lib/args.h"
-#include "lib/strextra.h"
 #include "lib/nls.h"
+#include "lib/strextra.h"
+#include <sys/stat.h>
 
 #if defined(_POSIX_C_SOURCE) || defined(__APPLE__)
 #include <dirent.h>
@@ -217,7 +217,11 @@ static void dir_display_dir(struct dir_config *config, const char *dir_name,
                         }
                         if (!found(file_name, files, file_count)) {
                                 files[file_count].file_name = strdup(globbuf.gl_pathv[j]);
-                                stat(files[file_count].file_name, &files[file_count].file_details);
+                                if (stat(files[file_count].file_name,
+                                         &files[file_count].file_details) != 0) {
+                                        memset(&files[file_count].file_details, 0,
+                                               sizeof(files[file_count].file_details));
+                                }
                                 file_count++;
                         }
                 }
@@ -288,8 +292,8 @@ static void dir_display_dir(struct dir_config *config, const char *dir_name,
                         if (S_ISDIR(files[i].file_details.st_mode)) {
                                 printf("%-40s %10s %s", display, "<DIR>", ttime);
                         } else {
-                                printf("%-40s %10lld %s", display, (long long)files[i].file_details.st_size,
-                                       ttime);
+                                printf("%-40s %10lld %s", display,
+                                       (long long)files[i].file_details.st_size, ttime);
                         }
                         lines++;
                 }

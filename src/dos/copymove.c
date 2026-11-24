@@ -11,8 +11,8 @@
 #include "dos/copymove.h"
 #include "fdbox.h"
 #include "lib/args.h"
-#include "lib/strextra.h"
 #include "lib/nls.h"
+#include "lib/strextra.h"
 
 /*
 This file is part of fdbox
@@ -227,8 +227,8 @@ static void move_print_extended_help() {
 
 static bool copy_move_is_dir(const char *path) {
         struct stat path_stat;
-        stat(path, &path_stat);
-        return S_ISDIR(path_stat.st_mode);
+        /* a path that is not there is no directory: path_stat is not filled then */
+        return stat(path, &path_stat) == 0 && S_ISDIR(path_stat.st_mode);
 }
 
 static char *copy_move_append_path(const char *directory, const char *file_name) {
@@ -317,7 +317,10 @@ static int copy_single_file(const char *from, const char *to, struct copy_config
                 struct utimbuf new_times;
                 int err;
 
-                stat(from, &source_attr);
+                if (stat(from, &source_attr) != 0) {
+                        fprintf(stderr, _("Error: failed reading the times of %s\n"), from);
+                        return errno;
+                }
                 new_times.actime = source_attr.st_atime;
                 new_times.modtime = source_attr.st_mtime;
                 err = utime(to, &new_times);
