@@ -7,9 +7,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: fdbox\n"
-"Report-Msgid-Bugs-To: https://gitea.disconnected-by-peer.at/GonSoft/fdbox/"
-"issues\n"
-"POT-Creation-Date: 2026-11-07 19:45+0100\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-25 18:25+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -129,69 +128,69 @@ msgstr ""
 msgid "Clear screen"
 msgstr ""
 
-#: src/dos/command.c:197
+#: src/dos/command.c:213
 #, c-format
 msgid "%s is a driver: LOAD %s, if you mean it\n"
 msgstr ""
 
-#: src/dos/command.c:201
+#: src/dos/command.c:217
 #, c-format
 msgid "%s: cannot start (error %ld)\n"
 msgstr ""
 
-#: src/dos/command.c:222
+#: src/dos/command.c:238
 msgid "an error occurred in execvp\n"
 msgstr ""
 
-#: src/dos/command.c:255
+#: src/dos/command.c:271
 msgid "Command line parsing failed\n"
 msgstr ""
 
-#: src/dos/command.c:289
+#: src/dos/command.c:305
 msgid "Invalid drive specification\n"
 msgstr ""
 
-#: src/dos/command.c:308
+#: src/dos/command.c:324
 #, c-format
 msgid "Command failed (%d)\n"
 msgstr ""
 
-#: src/dos/command.c:318
+#: src/dos/command.c:334
 #, c-format
 msgid "Bad command or file name - %s\n"
 msgstr ""
 
-#: src/dos/command.c:327
+#: src/dos/command.c:343
 #, c-format
 msgid "Command not found - %d \n"
 msgstr ""
 
-#: src/dos/command.c:398
+#: src/dos/command.c:414
 #, c-format
 msgid "%s: cannot open\n"
 msgstr ""
 
-#: src/dos/command.c:425
+#: src/dos/command.c:441
 msgid "Syntax error: a redirection without a file name\n"
 msgstr ""
 
-#: src/dos/command.c:477
+#: src/dos/command.c:493
 msgid "Too many pipes\n"
 msgstr ""
 
-#: src/dos/command.c:549
+#: src/dos/command.c:567
 msgid "Runs an MS-DOS interactive shell"
 msgstr ""
 
-#: src/dos/command.c:580
+#: src/dos/command.c:598
 msgid "   command {shell command} /l\n"
 msgstr ""
 
-#: src/dos/command.c:581
+#: src/dos/command.c:599
 msgid "   Runs an interactive shell \n"
 msgstr ""
 
-#: src/dos/command.c:582
+#: src/dos/command.c:600
 msgid "   TODO: properly implement the command.com switches \n"
 msgstr ""
 
@@ -227,7 +226,7 @@ msgstr ""
 msgid "   /v Verbose copy\n"
 msgstr ""
 
-#: src/dos/copymove.c:212 src/dos/copymove.c:223 src/dos/dir.c:484
+#: src/dos/copymove.c:212 src/dos/copymove.c:223 src/dos/dir.c:518
 msgid "Examples:\n"
 msgstr ""
 
@@ -270,22 +269,27 @@ msgstr ""
 msgid "Warning: copying attributes on MSDOS is not supported yet\n"
 msgstr ""
 
-#: src/dos/copymove.c:325
+#: src/dos/copymove.c:321
+#, c-format
+msgid "Error: failed reading the times of %s\n"
+msgstr ""
+
+#: src/dos/copymove.c:328
 #, c-format
 msgid "Error: failed setting time on %s\n"
 msgstr ""
 
-#: src/dos/copymove.c:330
+#: src/dos/copymove.c:333
 #, c-format
 msgid "Error: failed setting ownership on %s\n"
 msgstr ""
 
-#: src/dos/copymove.c:363
+#: src/dos/copymove.c:366
 #, c-format
 msgid "Error: failed moving %s->%s\n"
 msgstr ""
 
-#: src/dos/copymove.c:367
+#: src/dos/copymove.c:370
 #, c-format
 msgid "Error: failed deleting original file: %s\n"
 msgstr ""
@@ -361,7 +365,7 @@ msgstr ""
 msgid "prompt you for a new time\n"
 msgstr ""
 
-#: src/dos/del.c:67 src/dos/dir.c:119 src/dos/md.c:56
+#: src/dos/del.c:67 src/dos/dir.c:136 src/dos/md.c:56 src/dos/rd.c:44
 msgid "Failed parsing command line args\n"
 msgstr ""
 
@@ -375,133 +379,133 @@ msgstr ""
 msgid "Deleted %d/%d files\n"
 msgstr ""
 
-#: src/dos/del.c:105
+#: src/dos/del.c:106
 #, c-format
 msgid "Deleted %d directories\n"
 msgstr ""
 
-#: src/dos/del.c:107
+#: src/dos/del.c:108
 #, c-format
 msgid "Deleted %d/%d directories\n"
 msgstr ""
 
-#: src/dos/del.c:115
+#: src/dos/del.c:116
 msgid "Delete one or more files"
 msgstr ""
 
-#: src/dos/del.c:160
+#: src/dos/del.c:161
 msgid "   del [files] /p /v /r /f\n"
 msgstr ""
 
-#: src/dos/del.c:161
+#: src/dos/del.c:162
 msgid "   /p Prompt for deletion of each file\n"
 msgstr ""
 
-#: src/dos/del.c:162
+#: src/dos/del.c:163
 msgid "   /v Verbose delete\n"
 msgstr ""
 
-#: src/dos/del.c:163
+#: src/dos/del.c:164
 msgid "   /r Recursive delete (delete subdirs)\n"
 msgstr ""
 
-#: src/dos/del.c:164
+#: src/dos/del.c:165
 msgid "   /f Force deletion of subdirs, or RO files\n"
 msgstr ""
 
-#: src/dos/dir.c:130
+#: src/dos/dir.c:147
 #, c-format
 msgid "Warning: %zd/%zd files will not be displayed\n"
 msgstr ""
 
-#: src/dos/dir.c:234
+#: src/dos/dir.c:268
 #, c-format
 msgid "Warning: %d/%d files will not be shown\n"
 msgstr ""
 
-#: src/dos/dir.c:238
+#: src/dos/dir.c:272
 #, c-format
 msgid ""
 "\n"
 "Directory of %s\n"
 msgstr ""
 
-#: src/dos/dir.c:302
+#: src/dos/dir.c:336
 msgid "Press enter to continue...\n"
 msgstr ""
 
-#: src/dos/dir.c:315
+#: src/dos/dir.c:349
 #, c-format
 msgid "%10d files(s)\t %lld bytes\n"
 msgstr ""
 
-#: src/dos/dir.c:316
+#: src/dos/dir.c:350
 #, c-format
 msgid "%10d dirs(s) \t %lld free\n"
 msgstr ""
 
-#: src/dos/dir.c:342
+#: src/dos/dir.c:376
 msgid "Displays a list of files and subdirectories in a directory"
 msgstr ""
 
-#: src/dos/dir.c:453
+#: src/dos/dir.c:487
 #, c-format
 msgid "invalid sort argument %c/\n"
 msgstr ""
 
-#: src/dos/dir.c:471
+#: src/dos/dir.c:505
 msgid "   dir [files] /p /w /s /b /l /O [files]\n"
 msgstr ""
 
-#: src/dos/dir.c:473
+#: src/dos/dir.c:507
 msgid "   /p pause after each screen\n"
 msgstr ""
 
-#: src/dos/dir.c:474
+#: src/dos/dir.c:508
 msgid "   /w use wide format, no details\n"
 msgstr ""
 
-#: src/dos/dir.c:475
+#: src/dos/dir.c:509
 msgid "   /s display contents of sub directories as well\n"
 msgstr ""
 
-#: src/dos/dir.c:476
+#: src/dos/dir.c:510
 msgid "   /b bare format - print no headers or summary\n"
 msgstr ""
 
-#: src/dos/dir.c:477
+#: src/dos/dir.c:511
 msgid "   /l lower case - all names are displayed in lower case\n"
 msgstr ""
 
-#: src/dos/dir.c:478
+#: src/dos/dir.c:512
 msgid "   /a[] filter files by attributes\n"
 msgstr ""
 
-#: src/dos/dir.c:479
+#: src/dos/dir.c:513
 msgid "       /ad - directories    /ar - readonly   /ah - hidden\n"
 msgstr ""
 
-#: src/dos/dir.c:480
+#: src/dos/dir.c:514
 msgid "       /as - system files\n"
 msgstr ""
 
-#: src/dos/dir.c:481
+#: src/dos/dir.c:515
 msgid "   /o[esdng] sort files\n"
 msgstr ""
 
-#: src/dos/dir.c:482
+#: src/dos/dir.c:516
 msgid "       /oe - extension       /os - by name    /od - date\n"
 msgstr ""
 
-#: src/dos/dir.c:483
+#: src/dos/dir.c:517
 msgid "       /on - by size         /og - directories first \n"
 msgstr ""
 
-#: src/dos/dir.c:485
+#: src/dos/dir.c:519
 msgid "> dir /w /os *.exe\n"
 msgstr ""
 
-#: src/dos/dir.c:486
+#: src/dos/dir.c:520
 msgid "> dir /p /b *.txt *.com\n"
 msgstr ""
 
@@ -518,12 +522,8 @@ msgstr ""
 msgid "Prints a string"
 msgstr ""
 
-#: src/dos/exit.c:14
-msgid "exit - TODO: Unimplemented yet\n"
-msgstr ""
-
-#: src/dos/exit.c:18
-msgid "Exits the interactive shell"
+#: src/dos/exit.c:23
+msgid "Leave the shell, with an optional status code"
 msgstr ""
 
 #: src/dos/for.c:82 src/dos/for.c:88 src/dos/for.c:99
@@ -546,6 +546,10 @@ msgstr ""
 msgid "Displays all readline history available"
 msgstr ""
 
+#: src/dos/if.c:126
+msgid "Conditionally execute a command"
+msgstr ""
+
 #: src/dos/keyb.c:26
 msgid "KEYB [code]\n"
 msgstr ""
@@ -566,10 +570,6 @@ msgstr ""
 
 #: src/dos/keyb.c:43
 msgid "Shows or changes the keyboard layout"
-msgstr ""
-
-#: src/dos/if.c:126
-msgid "Conditionally execute a command"
 msgstr ""
 
 #: src/dos/load.c:32
@@ -606,26 +606,48 @@ msgstr ""
 msgid "   /r Recursive creation (otherwise, creates only top level)\n"
 msgstr ""
 
-#: src/dos/md.c:169
-#, c-format
-msgid "Created %s\n"
-msgstr ""
-
-#: src/dos/md.c:171
+#: src/dos/md.c:168
 #, c-format
 msgid "Failed creating %s\n"
 msgstr ""
 
-#: src/dos/path.c:14
-msgid "path - TODO: Unimplemented yet\n"
+#: src/dos/md.c:170
+#, c-format
+msgid "Created %s\n"
 msgstr ""
 
-#: src/dos/path.c:18
-msgid "Here should be a basic help for path"
+#: src/dos/path.c:41
+msgid "Display or set the command search path (PATH)"
 msgstr ""
 
 #: src/dos/prompt.c:33
 msgid "Set the prompt"
+msgstr ""
+
+#: src/dos/rd.c:31
+msgid "   rd [directories]\n"
+msgstr ""
+
+#: src/dos/rd.c:32
+msgid "   The directories must be empty.\n"
+msgstr ""
+
+#: src/dos/rd.c:53
+msgid "Required parameter missing\n"
+msgstr ""
+
+#: src/dos/rd.c:59
+#, c-format
+msgid "%s cannot be removed (not empty, in use or not found)\n"
+msgstr ""
+
+#: src/dos/rd.c:62
+#, c-format
+msgid "Removed %s\n"
+msgstr ""
+
+#: src/dos/rd.c:68
+msgid "Remove one or more empty directories"
 msgstr ""
 
 #: src/dos/reboot.c:24
@@ -697,49 +719,172 @@ msgstr ""
 msgid "Displays about text (this help)"
 msgstr ""
 
-#: src/main.c:34
+#: src/main.c:37
 #, c-format
 msgid "%c: was not cleanly unmounted, checking it\n"
 msgstr ""
 
-#: src/main.c:41
+#: src/main.c:44
 #, c-format
 msgid "%c: stays read-only: run OFSCK /F %c: or ORECOVER\n"
 msgstr ""
 
-#: src/main.c:74
+#: src/main.c:77
 msgid ""
 "The check found errors it could not repair. EXIT goes on with the start.\n"
 msgstr ""
 
-#: src/unix/cal.c:12
-msgid "cal - TODO: Unimplemented yet\n"
+#: src/unix/basename.c:24
+#, c-format
+msgid "basename: a path is needed\n"
 msgstr ""
 
-#: src/unix/cal.c:16
-msgid "Here should be a basic help for cal"
+#: src/unix/basename.c:51
+msgid "Strip the directory (and an optional suffix) from a path"
 msgstr ""
 
-#: src/unix/head.c:12
-msgid "head - TODO: Unimplemented yet\n"
+#: src/unix/cal.c:35
+msgid "January"
 msgstr ""
 
-#: src/unix/head.c:16
-msgid "Here should be a basic help for head"
+#: src/unix/cal.c:35
+msgid "February"
 msgstr ""
 
-#: src/unix/hexdump.c:12
-msgid "hexdump - TODO: Unimplemented yet\n"
+#: src/unix/cal.c:35
+msgid "March"
 msgstr ""
 
-#: src/unix/hexdump.c:16
-msgid "Here should be a basic help for hexdump"
+#: src/unix/cal.c:36
+msgid "April"
 msgstr ""
 
-#: src/unix/tail.c:12
-msgid "tail - TODO: Unimplemented yet\n"
+#: src/unix/cal.c:36
+msgid "May"
 msgstr ""
 
-#: src/unix/tail.c:16
-msgid "Here should be a basic help for tail"
+#: src/unix/cal.c:36
+msgid "June"
+msgstr ""
+
+#: src/unix/cal.c:37
+msgid "July"
+msgstr ""
+
+#: src/unix/cal.c:37
+msgid "August"
+msgstr ""
+
+#: src/unix/cal.c:37
+msgid "September"
+msgstr ""
+
+#: src/unix/cal.c:38
+msgid "October"
+msgstr ""
+
+#: src/unix/cal.c:38
+msgid "November"
+msgstr ""
+
+#: src/unix/cal.c:38
+msgid "December"
+msgstr ""
+
+#: src/unix/cal.c:55
+#, c-format
+msgid "cal: invalid month or year\n"
+msgstr ""
+
+#: src/unix/cal.c:63
+msgid "Su Mo Tu We Th Fr Sa\n"
+msgstr ""
+
+#: src/unix/cal.c:80
+msgid "Print a month calendar (cal [month [year]])"
+msgstr ""
+
+#: src/unix/dirname.c:24
+#, c-format
+msgid "dirname: a path is needed\n"
+msgstr ""
+
+#: src/unix/dirname.c:56
+msgid "Strip the last component from a path"
+msgstr ""
+
+#: src/unix/head.c:64
+#, c-format
+msgid "head: cannot open %s\n"
+msgstr ""
+
+#: src/unix/head.c:77
+msgid "Print the first lines of a file (default 10, -n COUNT)"
+msgstr ""
+
+#: src/unix/hexdump.c:62
+#, c-format
+msgid "hexdump: cannot open %s\n"
+msgstr ""
+
+#: src/unix/hexdump.c:72
+msgid "Dump the contents of a file as hex and ASCII"
+msgstr ""
+
+#: src/unix/pwd.c:50
+msgid "Print the current working directory"
+msgstr ""
+
+#: src/unix/sort.c:79
+#, c-format
+msgid "sort: cannot open %s\n"
+msgstr ""
+
+#: src/unix/sort.c:107
+msgid "Sort lines of text (-r reverses)"
+msgstr ""
+
+#: src/unix/tail.c:76
+#, c-format
+msgid "tail: cannot open %s\n"
+msgstr ""
+
+#: src/unix/tail.c:91
+msgid "Print the last lines of a file (default 10, -n COUNT)"
+msgstr ""
+
+#: src/unix/touch.c:48
+#, c-format
+msgid "touch: a file name is needed\n"
+msgstr ""
+
+#: src/unix/touch.c:53
+#, c-format
+msgid "touch: cannot touch %s\n"
+msgstr ""
+
+#: src/unix/touch.c:60
+msgid "Create a file or update its time to now"
+msgstr ""
+
+#: src/unix/uniq.c:59
+#, c-format
+msgid "uniq: cannot open %s\n"
+msgstr ""
+
+#: src/unix/uniq.c:85
+msgid "Collapse adjacent equal lines (-c -d -u)"
+msgstr ""
+
+#: src/unix/wc.c:103
+#, c-format
+msgid "wc: cannot open %s\n"
+msgstr ""
+
+#: src/unix/wc.c:116
+msgid "total"
+msgstr ""
+
+#: src/unix/wc.c:121
+msgid "Count lines, words and bytes (-l -w -c)"
 msgstr ""
