@@ -41,10 +41,8 @@ https://github.com/tproffen/DiffuseCode/blob/master/lib_f90/win32-glob.c
 #include <glob.h>
 #include <stdbool.h>
 #include <sys/ioctl.h>
-#include <unistd.h>
-#if !defined(__GONWARE__)
 #include <sys/statvfs.h>
-#endif
+#include <unistd.h>
 #endif
 
 #include "lib/readline.h"
@@ -227,7 +225,7 @@ static int dir_rows(void) {
 
 /* the bytes free on the volume of path, -1 when that is not known */
 static long long dir_free(const char *path) {
-#if (defined(_POSIX_C_SOURCE) || defined(__APPLE__)) && !defined(__GONWARE__)
+#if defined(_POSIX_C_SOURCE) || defined(__APPLE__)
         struct statvfs v;
         if (statvfs(path, &v) == 0) {
                 return (long long)v.f_bavail * (long long)v.f_frsize;
@@ -581,7 +579,9 @@ static int dir_file_comperator(const void *a, const void *b) {
                         return islower((unsigned char)*k) ? -v : v;
                 }
         }
-        return 0;
+        /* equal in every key: by name, so that the order does not depend on
+           how the file system lists them */
+        return strcasecmp(file_base_name(file1->file_name), file_base_name(file2->file_name));
 }
 
 /* the letters of /O (after the O): keys as dir_file_comperator takes
