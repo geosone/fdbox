@@ -8,6 +8,7 @@
 #include "dos/command.h"
 #include "dos/for.h"
 #include "fdbox.h"
+#include "lib/environ.h"
 #include "lib/nls.h"
 
 #if defined(__TURBOC__)
@@ -115,13 +116,13 @@ int for_line(const char *line) {
                                 for (i = 0; i < g.gl_pathc; i++) {
                                         if (run_one(var, command, g.gl_pathv[i]) != EXIT_SUCCESS)
                                                 break;
-                                        level = errno;
+                                        level = command_errorlevel;
                                 }
                         globfree(&g);
                 } else {
                         if (run_one(var, command, item) != EXIT_SUCCESS)
                                 break;
-                        level = errno;
+                        level = command_errorlevel;
                 }
         }
         return level;

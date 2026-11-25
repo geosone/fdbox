@@ -3,19 +3,24 @@ cmake_minimum_required(VERSION 3.10)
 # add the executable
 project(fdbox VERSION 0.1)
 
-include(cmake/CPM.cmake)
+# the clang-format targets (Format.cmake, fetched from GitHub when CMake
+# configures); OFF builds and tests without fetching anything
+option(FDBOX_FORMAT "clang-format targets (fetches Format.cmake)" ON)
+if(FDBOX_FORMAT)
+  include(cmake/CPM.cmake)
 
-cpmaddpackage(
-  NAME
-  Format.cmake
-  VERSION
-  1.7.2
-  GITHUB_REPOSITORY
-  TheLartians/Format.cmake
-  OPTIONS # set to yes skip cmake formatting
-  "FORMAT_SKIP_CMAKE NO"
-  # path to exclude (optional, supports regular expressions)
-  "CMAKE_FORMAT_EXCLUDE cmake/CPM.cmake")
+  cpmaddpackage(
+    NAME
+    Format.cmake
+    VERSION
+    1.7.2
+    GITHUB_REPOSITORY
+    TheLartians/Format.cmake
+    OPTIONS # set to yes skip cmake formatting
+    "FORMAT_SKIP_CMAKE NO"
+    # path to exclude (optional, supports regular expressions)
+    "CMAKE_FORMAT_EXCLUDE cmake/CPM.cmake")
+endif()
 
 add_executable(
   tests
@@ -101,6 +106,20 @@ endif()
 
 target_include_directories(fdbox PUBLIC "${PROJECT_BINARY_DIR}"
                                         "${PROJECT_SOURCE_DIR}/src/")
+
+# ctest: the unit tests, the commands (tests/commands.sh: each applet and
+# the shell's pipes, redirections, batch files, error levels) and the line
+# editor in a pseudo terminal (tests/readline.py)
+enable_testing()
+add_test(NAME unit COMMAND tests)
+if(UNIX)
+  add_test(NAME commands COMMAND sh "${PROJECT_SOURCE_DIR}/tests/commands.sh" $<TARGET_FILE:fdbox>)
+  find_package(Python3 COMPONENTS Interpreter)
+  if(Python3_FOUND)
+    add_test(NAME readline COMMAND Python3::Interpreter "${PROJECT_SOURCE_DIR}/tests/readline.py"
+                                   $<TARGET_FILE:fdbox>)
+  endif()
+endif()
 
 # Translations (src/lib/nls.h, po/): -DFDBOX_NLS=ON builds fdbox with
 # gettext and the catalogues of po/ as <prefix>/share/locale/<lang>/

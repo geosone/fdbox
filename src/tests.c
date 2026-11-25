@@ -479,6 +479,18 @@ bool test_file_extensions() {
         c = file_get_extension(str);
         ok &= verify_string_equals(c, "blabla", "getting very long extention + path");
 
+        strcpy(str, "/var/lib/file");
+        c = file_get_extension(str);
+        ok &= verify_string_equals(c, "", "no extension");
+
+        strcpy(str, "./dir.d/file");
+        c = file_get_extension(str);
+        ok &= verify_string_equals(c, "", "no extension, a dot in the directory");
+
+        strcpy(str, "C:\\DIR.X\\FILE.TXT");
+        c = file_get_extension(str);
+        ok &= verify_string_equals(c, "TXT", "DOS path");
+
         return ok;
 }
 

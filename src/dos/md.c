@@ -121,53 +121,38 @@ static void mkdir_print_extended_help() {
         fputs(_("   /r Recursive creation (otherwise, creates only top level)\n"), stdout);
 }
 
+static int mkdir_one(const char *path) {
+#if defined(__DJGPP__) || defined(_POSIX_C_SOURCE)
+        return mkdir(path, 0755);
+#elif defined(__TURBOC__) || defined(__WIN32__)
+        return mkdir(path);
+#endif
+}
+
+/* dir_name; with /r (mkdir -p) each missing directory above it first, and
+ * one that is there already is no error */
 static bool mkdir_create_dir(char *dir_name, const struct mkdir_config *config) {
-        /* workflow - we first try the whole dir, if we fail
-         * we will truncate the full path after each dir, and retry
-         * trversing from left to right.
-         * For example:
-         * mkdir foo/bar/baz
-         * fails ?
-         * mkdir foo/
-         * mkdir foo/bar
-         * mkdir foo/bar/zaz
-         *
-         * The idea is that after each iteration, we truncate the original
-         * path at the first "/" found.
-         */
+        struct stat st;
         int r;
 
-        char *c = (char *)dir_name;
-        char c2 = dir_name[0];
-        bool failed_once = false;
-
-        do {
-#if defined(__DJGPP__) || defined(_POSIX_C_SOURCE)
-                r = mkdir(dir_name, 0755);
-#elif defined(__TURBOC__) || defined(__WIN32__)
-                r = mkdir(dir_name);
-#endif
-                failed_once |= r != 0;
-                *c = c2;
-                c = strchr(c + 1, DIRECTORY_DELIMITER[0]);
-                if (c == NULL) {
-                        break;
+        if (config->recursive) {
+                char *p;
+                for (p = dir_name + 1; *p; p++) {
+                        char c = *p;
+                        /* a separator, not the one of a root ("\", "C:\") */
+                        if ((c != '/' && c != '\\') || p[-1] == ':' || p[-1] == '/' ||
+                            p[-1] == '\\') {
+                                continue;
+                        }
+                        *p = 0;
+                        if (stat(dir_name, &st) != 0) {
+                                mkdir_one(dir_name);
+                        }
+                        *p = c;
                 }
-                c2 = *c;
-                *c = 0;
-
-                if (!config->recursive) {
-                        failed_once = false;
-                        break;
-                }
-        } while (r != 0);
-
-        if (failed_once) {
-#if defined(__DJGPP__) || defined(_POSIX_C_SOURCE)
-                r = mkdir(dir_name, 0755);
-#elif defined(__TURBOC__) || defined(__WIN32__)
-                r = mkdir(dir_name);
-#endif
+                r = stat(dir_name, &st) == 0 && S_ISDIR(st.st_mode) ? 0 : mkdir_one(dir_name);
+        } else {
+                r = mkdir_one(dir_name);
         }
 
         if (r != 0) {

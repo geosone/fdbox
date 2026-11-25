@@ -8,6 +8,9 @@ For license - read license.txt
 
 #include <stddef.h>
 
+/* the error level of the last command */
+extern int command_errorlevel;
+
 char *get_prompt(const char *prompt, char prompt_string[], size_t prompt_str_len);
 
 void expand_string(const char *src, char *dest, size_t dest_length);

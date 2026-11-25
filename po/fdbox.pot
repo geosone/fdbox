@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fdbox\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-25 19:10+0100\n"
+"POT-Creation-Date: 2026-11-25 19:42+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -80,7 +80,7 @@ msgstr ""
 msgid "Makes sound for a specified length in milliseconds"
 msgstr ""
 
-#: src/dos/call.c:31
+#: src/dos/call.c:32
 msgid "Here should be a basic help for call"
 msgstr ""
 
@@ -128,244 +128,267 @@ msgstr ""
 msgid "Clear screen"
 msgstr ""
 
-#: src/dos/command.c:217
+#: src/dos/command.c:220
 #, c-format
 msgid "%s is a driver: LOAD %s, if you mean it\n"
 msgstr ""
 
-#: src/dos/command.c:221
+#: src/dos/command.c:224
 #, c-format
 msgid "%s: cannot start (error %ld)\n"
 msgstr ""
 
-#: src/dos/command.c:242
+#: src/dos/command.c:245
 msgid "an error occurred in execvp\n"
 msgstr ""
 
-#: src/dos/command.c:275
+#: src/dos/command.c:278
 msgid "Command line parsing failed\n"
 msgstr ""
 
-#: src/dos/command.c:309
+#: src/dos/command.c:312
 msgid "Invalid drive specification\n"
 msgstr ""
 
-#: src/dos/command.c:328
-#, c-format
-msgid "Command failed (%d)\n"
-msgstr ""
-
-#: src/dos/command.c:338
+#: src/dos/command.c:340
 #, c-format
 msgid "Bad command or file name - %s\n"
 msgstr ""
 
-#: src/dos/command.c:347
+#: src/dos/command.c:349
 #, c-format
 msgid "Command not found - %d \n"
 msgstr ""
 
-#: src/dos/command.c:418
+#: src/dos/command.c:420
 #, c-format
 msgid "%s: cannot open\n"
 msgstr ""
 
-#: src/dos/command.c:445
+#: src/dos/command.c:463
 msgid "Syntax error: a redirection without a file name\n"
 msgstr ""
 
-#: src/dos/command.c:497
+#: src/dos/command.c:513
 msgid "Too many pipes\n"
 msgstr ""
 
-#: src/dos/command.c:571
+#: src/dos/command.c:587
 msgid "Runs an MS-DOS interactive shell"
 msgstr ""
 
-#: src/dos/command.c:602
+#: src/dos/command.c:618
 msgid "   command {shell command} /l\n"
 msgstr ""
 
-#: src/dos/command.c:603
+#: src/dos/command.c:619
 msgid "   Runs an interactive shell \n"
 msgstr ""
 
-#: src/dos/command.c:604
+#: src/dos/command.c:620
 msgid "   TODO: properly implement the command.com switches \n"
 msgstr ""
 
-#: src/dos/copymove.c:85
+#: src/dos/copymove.c:88
+msgid "Error: the command is too long\n"
+msgstr ""
+
+#: src/dos/copymove.c:101 src/dos/copymove.c:178
 msgid "Error: no source file provided\n"
 msgstr ""
 
-#: src/dos/copymove.c:90
-msgid "Error: no destination file provided\n"
+#: src/dos/copymove.c:110 src/dos/copymove.c:125
+#, c-format
+msgid "Cannot open %s\n"
 msgstr ""
 
-#: src/dos/copymove.c:135
+#: src/dos/copymove.c:119 src/dos/copymove.c:211 src/dos/type.c:82
+#, c-format
+msgid "File not found - %s\n"
+msgstr ""
+
+#: src/dos/copymove.c:204
+#, c-format
+msgid "Error: %s is not a directory, several files cannot go there\n"
+msgstr ""
+
+#: src/dos/copymove.c:254
 msgid "Copies one or more files to another location"
 msgstr ""
 
-#: src/dos/copymove.c:137
+#: src/dos/copymove.c:256
 msgid "Moves one or more files to another location"
 msgstr ""
 
-#: src/dos/copymove.c:207
-msgid "   copy [from] [to] /a /y /v\n"
+#: src/dos/copymove.c:326
+msgid "   copy [from...] [to] /a /y /v\n"
 msgstr ""
 
-#: src/dos/copymove.c:209
+#: src/dos/copymove.c:327
+msgid "   copy a+b[+...] [to]  joins files (without to: onto a)\n"
+msgstr ""
+
+#: src/dos/copymove.c:329
 msgid "   /a Copy attributes\n"
 msgstr ""
 
-#: src/dos/copymove.c:210 src/dos/copymove.c:221
+#: src/dos/copymove.c:330 src/dos/copymove.c:341
 msgid "   /y Ask for confirmation on overwrite (WIP)\n"
 msgstr ""
 
-#: src/dos/copymove.c:211 src/dos/copymove.c:222
+#: src/dos/copymove.c:331 src/dos/copymove.c:342
 msgid "   /v Verbose copy\n"
 msgstr ""
 
-#: src/dos/copymove.c:212 src/dos/copymove.c:223 src/dos/dir.c:518
+#: src/dos/copymove.c:332 src/dos/copymove.c:343 src/dos/dir.c:522
 msgid "Examples:\n"
 msgstr ""
 
-#: src/dos/copymove.c:213
+#: src/dos/copymove.c:333
 msgid "> copy c:\\autoexec.bat c:\\autoexec.old \n"
 msgstr ""
 
-#: src/dos/copymove.c:214
+#: src/dos/copymove.c:334
 msgid "> copy *.exe backup\\ \n"
 msgstr ""
 
-#: src/dos/copymove.c:219
+#: src/dos/copymove.c:339
 msgid "   move [from] [to] /a /y /v\n"
 msgstr ""
 
-#: src/dos/copymove.c:224
+#: src/dos/copymove.c:344
 msgid "> move c:\\autoexec.bat c:\\autoexec.old \n"
 msgstr ""
 
-#: src/dos/copymove.c:225
+#: src/dos/copymove.c:345
 msgid "> move *.exe backup\\ \n"
 msgstr ""
 
-#: src/dos/copymove.c:262
+#: src/dos/copymove.c:382
 #, c-format
 msgid "Failed reading from %s\n"
 msgstr ""
 
-#: src/dos/copymove.c:267
+#: src/dos/copymove.c:387
 #, c-format
 msgid "Failed opening %s for writing\n"
 msgstr ""
 
-#: src/dos/copymove.c:307
+#: src/dos/copymove.c:427
 #, c-format
 msgid "Failed writing to %s (wrote %lld/%lld bytes)\n"
 msgstr ""
 
-#: src/dos/copymove.c:314
+#: src/dos/copymove.c:434
 msgid "Warning: copying attributes on MSDOS is not supported yet\n"
 msgstr ""
 
-#: src/dos/copymove.c:321
+#: src/dos/copymove.c:441
 #, c-format
 msgid "Error: failed reading the times of %s\n"
 msgstr ""
 
-#: src/dos/copymove.c:328
+#: src/dos/copymove.c:448
 #, c-format
 msgid "Error: failed setting time on %s\n"
 msgstr ""
 
-#: src/dos/copymove.c:333
+#: src/dos/copymove.c:453
 #, c-format
 msgid "Error: failed setting ownership on %s\n"
 msgstr ""
 
-#: src/dos/copymove.c:366
+#: src/dos/copymove.c:486
 #, c-format
 msgid "Error: failed moving %s->%s\n"
 msgstr ""
 
-#: src/dos/copymove.c:370
+#: src/dos/copymove.c:490
 #, c-format
 msgid "Error: failed deleting original file: %s\n"
 msgstr ""
 
-#: src/dos/datetime.c:73
+#: src/dos/datetime.c:74
 msgid "Enter new time (hh:mm:ss [am/pm]): "
 msgstr ""
 
-#: src/dos/datetime.c:99
+#: src/dos/datetime.c:100
 msgid "Enter new date (mm-dd-[yy]yy): "
 msgstr ""
 
-#: src/dos/datetime.c:106
+#: src/dos/datetime.c:107
 msgid "Display or modify system date"
 msgstr ""
 
-#: src/dos/datetime.c:107
+#: src/dos/datetime.c:108
 msgid "Display or modify system time"
 msgstr ""
 
-#: src/dos/datetime.c:191
+#: src/dos/datetime.c:192
 #, c-format
 msgid "Current date is %02d-%02d-%4d\n"
 msgstr ""
 
-#: src/dos/datetime.c:250
+#: src/dos/datetime.c:270
+msgid "Invalid time\n"
+msgstr ""
+
+#: src/dos/datetime.c:288
+#, c-format
+msgid "Cannot set the time to %02d:%02d:%02d: %s\n"
+msgstr ""
+
+#: src/dos/datetime.c:297
 #, c-format
 msgid "TODO: set time to %02d:%02d:%02d\n"
 msgstr ""
 
-#: src/dos/datetime.c:268
+#: src/dos/datetime.c:315
 #, c-format
 msgid "Current time is %02d:%02d:%02d\n"
 msgstr ""
 
-#: src/dos/datetime.c:273
+#: src/dos/datetime.c:320
 msgid "        date /d [new date]\n"
 msgstr ""
 
-#: src/dos/datetime.c:274
+#: src/dos/datetime.c:321
 msgid ""
 "        /d displays date and exits\n"
 "\n"
 msgstr ""
 
-#: src/dos/datetime.c:275
+#: src/dos/datetime.c:322
 msgid "If you pass a date to this command, it will just set it\n"
 msgstr ""
 
-#: src/dos/datetime.c:276 src/dos/datetime.c:285
+#: src/dos/datetime.c:323 src/dos/datetime.c:332
 msgid "and not be interactive. If you don't - the command will\n"
 msgstr ""
 
-#: src/dos/datetime.c:277
+#: src/dos/datetime.c:324
 msgid "prompt you for a new date\n"
 msgstr ""
 
-#: src/dos/datetime.c:282
+#: src/dos/datetime.c:329
 msgid "        time /t [new time]\n"
 msgstr ""
 
-#: src/dos/datetime.c:283
+#: src/dos/datetime.c:330
 msgid ""
 "        /t displays time and exits\n"
 "\n"
 msgstr ""
 
-#: src/dos/datetime.c:284
+#: src/dos/datetime.c:331
 msgid "If you pass a time to this command, it will just set it\n"
 msgstr ""
 
-#: src/dos/datetime.c:286
+#: src/dos/datetime.c:333
 msgid "prompt you for a new time\n"
 msgstr ""
 
-#: src/dos/del.c:87 src/dos/dir.c:136 src/dos/md.c:59 src/dos/rd.c:44
+#: src/dos/del.c:87 src/dos/dir.c:139 src/dos/md.c:59 src/dos/rd.c:44
 msgid "Failed parsing command line args\n"
 msgstr ""
 
@@ -432,99 +455,106 @@ msgstr ""
 msgid "Could not remove %s\n"
 msgstr ""
 
-#: src/dos/dir.c:147
+#: src/dos/dir.c:150
 #, c-format
 msgid "Warning: %zd/%zd files will not be displayed\n"
 msgstr ""
 
-#: src/dos/dir.c:268
+#: src/dos/dir.c:297
 #, c-format
 msgid "Warning: %d/%d files will not be shown\n"
 msgstr ""
 
-#: src/dos/dir.c:272
+#: src/dos/dir.c:301
 #, c-format
 msgid ""
 "\n"
 "Directory of %s\n"
 msgstr ""
 
-#: src/dos/dir.c:336
-msgid "Press enter to continue...\n"
+#: src/dos/dir.c:365
+msgid "Press any key to continue . . ."
 msgstr ""
 
-#: src/dos/dir.c:349
+#: src/dos/dir.c:381
 #, c-format
 msgid "%10d files(s)\t %lld bytes\n"
 msgstr ""
 
-#: src/dos/dir.c:350
+#: src/dos/dir.c:383
 #, c-format
 msgid "%10d dirs(s) \t %lld free\n"
 msgstr ""
 
-#: src/dos/dir.c:376
+#: src/dos/dir.c:385
+#, c-format
+msgid "%10d dirs(s)\n"
+msgstr ""
+
+#: src/dos/dir.c:412
 msgid "Displays a list of files and subdirectories in a directory"
 msgstr ""
 
-#: src/dos/dir.c:487
+#: src/dos/dir.c:489
 #, c-format
-msgid "invalid sort argument %c/\n"
-msgstr ""
-
-#: src/dos/dir.c:505
-msgid "   dir [files] /p /w /s /b /l /O [files]\n"
+msgid "invalid sort argument %s\n"
 msgstr ""
 
 #: src/dos/dir.c:507
-msgid "   /p pause after each screen\n"
-msgstr ""
-
-#: src/dos/dir.c:508
-msgid "   /w use wide format, no details\n"
+msgid "   dir [files] /p /w /s /b /l /O [files]\n"
 msgstr ""
 
 #: src/dos/dir.c:509
-msgid "   /s display contents of sub directories as well\n"
+msgid "   /p pause after each screen\n"
 msgstr ""
 
 #: src/dos/dir.c:510
-msgid "   /b bare format - print no headers or summary\n"
+msgid "   /w use wide format, no details\n"
 msgstr ""
 
 #: src/dos/dir.c:511
-msgid "   /l lower case - all names are displayed in lower case\n"
+msgid "   /s display contents of sub directories as well\n"
 msgstr ""
 
 #: src/dos/dir.c:512
-msgid "   /a[] filter files by attributes\n"
+msgid "   /b bare format - print no headers or summary\n"
 msgstr ""
 
 #: src/dos/dir.c:513
-msgid "       /ad - directories    /ar - readonly   /ah - hidden\n"
+msgid "   /l lower case - all names are displayed in lower case\n"
 msgstr ""
 
 #: src/dos/dir.c:514
-msgid "       /as - system files\n"
+msgid "   /a[] filter files by attributes\n"
 msgstr ""
 
 #: src/dos/dir.c:515
-msgid "   /o[esdng] sort files\n"
+msgid "       /ad - directories    /ar - readonly   /ah - hidden\n"
 msgstr ""
 
 #: src/dos/dir.c:516
-msgid "       /oe - extension       /os - by name    /od - date\n"
+msgid "       /as - system files\n"
 msgstr ""
 
 #: src/dos/dir.c:517
-msgid "       /on - by size         /og - directories first \n"
+msgid ""
+"   /o[-][nesdg]... sort files, the keys in order (- reverses the next)\n"
 msgstr ""
 
 #: src/dos/dir.c:519
+msgid ""
+"       /on - by name         /oe - extension  /od - date (oldest first)\n"
+msgstr ""
+
+#: src/dos/dir.c:521
+msgid "       /os - by size         /og - directories first; /o alone: /ogn\n"
+msgstr ""
+
+#: src/dos/dir.c:523
 msgid "> dir /w /os *.exe\n"
 msgstr ""
 
-#: src/dos/dir.c:520
+#: src/dos/dir.c:524
 msgid "> dir /p /b *.txt *.com\n"
 msgstr ""
 
@@ -545,11 +575,11 @@ msgstr ""
 msgid "Leave the shell, with an optional status code"
 msgstr ""
 
-#: src/dos/for.c:82 src/dos/for.c:88 src/dos/for.c:99
+#: src/dos/for.c:83 src/dos/for.c:89 src/dos/for.c:100
 msgid "Syntax error: FOR %V IN (set) DO command\n"
 msgstr ""
 
-#: src/dos/for.c:143
+#: src/dos/for.c:144
 msgid "Runs a command for each file of a set"
 msgstr ""
 
@@ -625,12 +655,12 @@ msgstr ""
 msgid "   /r Recursive creation (otherwise, creates only top level)\n"
 msgstr ""
 
-#: src/dos/md.c:174
+#: src/dos/md.c:159
 #, c-format
 msgid "Failed creating %s\n"
 msgstr ""
 
-#: src/dos/md.c:176
+#: src/dos/md.c:161
 #, c-format
 msgid "Created %s\n"
 msgstr ""
@@ -704,11 +734,6 @@ msgstr ""
 msgid "Here should be a basic help for shift"
 msgstr ""
 
-#: src/dos/type.c:82
-#, c-format
-msgid "File not found - %s\n"
-msgstr ""
-
 #: src/dos/type.c:99
 msgid "Prints the content of a file"
 msgstr ""
@@ -738,17 +763,17 @@ msgstr ""
 msgid "Displays about text (this help)"
 msgstr ""
 
-#: src/main.c:37
+#: src/main.c:38
 #, c-format
 msgid "%c: was not cleanly unmounted, checking it\n"
 msgstr ""
 
-#: src/main.c:44
+#: src/main.c:45
 #, c-format
 msgid "%c: stays read-only: run OFSCK /F %c: or ORECOVER\n"
 msgstr ""
 
-#: src/main.c:77
+#: src/main.c:79
 msgid ""
 "The check found errors it could not repair. EXIT goes on with the start.\n"
 msgstr ""

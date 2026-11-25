@@ -35,9 +35,17 @@ void clrscr() { _clearscreen(_GCLEARSCREEN); }
 #endif
 
 #if defined(_POSIX_C_SOURCE) || defined(__APPLE__)
+#include <dirent.h>
 #include <stdbool.h>
+#include <strings.h>
 #include <termios.h>
 #include <unistd.h>
+#if defined(__GONWARE__)
+#include <gonware/gdos.h>
+#include <gonware/syscall.h>
+#else
+#include <poll.h>
+#endif
 #endif
 
 #if defined(__WIN32__)
@@ -109,15 +117,43 @@ int read_char() {
  * report (ESC [ < 0 ; 1 ; 1 M) or a key with Alt (ESC x) leaves nothing
  * behind; those of no use here give 0.
  */
-int read_char() {
-        int i, num, first, final;
+/* a byte of the terminal, read from fd 0 itself: nothing stays behind in
+ * stdin's buffer, so key_waiting can tell a lone Esc from a sequence */
+static int key_getc(void) {
+        unsigned char c;
+        ssize_t n;
 
-        i = getchar();
+        do {
+                n = read(0, &c, 1);
+        } while (n < 0 && errno == EINTR);
+        return n == 1 ? c : -1;
+}
+
+/* another byte within ms milliseconds: the rest of a sequence */
+static bool key_waiting(int ms) {
+#if defined(__GONWARE__)
+        return gdos_call2(GDOS_TTY_POLL, 0, (long)ms * 1000) > 0;
+#else
+        struct pollfd p;
+        p.fd = 0;
+        p.events = POLLIN;
+        p.revents = 0;
+        return poll(&p, 1, ms) > 0;
+#endif
+}
+
+int read_char() {
+        int i, num, mod, param, final;
+
+        i = key_getc();
         switch (i) {
         case '\033':
-                i = getchar();
+                if (!key_waiting(50)) {
+                        return KEY_ESC; /* Esc alone */
+                }
+                i = key_getc();
                 if (i == 'O') { /* ESC O P, ESC O H */
-                        i = getchar();
+                        i = key_getc();
                         if (i == 'H') {
                                 return KEY_HOME;
                         }
@@ -129,21 +165,30 @@ int read_char() {
                 if (i != '[') {
                         return 0; /* Alt and a key */
                 }
-                /* the parameters, then the final byte; num is the first */
+                /* the parameters, then the final byte; num is the first,
+                 * mod the second (xterm's modifiers + 1: 4 Ctrl) */
                 num = 0;
-                first = 1;
-                final = getchar();
+                mod = 0;
+                param = 0;
+                final = key_getc();
                 while (final >= 0x30 && final <= 0x3f) {
                         if (final >= '0' && final <= '9') {
-                                if (first) {
+                                if (param == 0) {
                                         num = num * 10 + final - '0';
+                                } else if (param == 1) {
+                                        mod = mod * 10 + final - '0';
                                 }
                         } else {
-                                first = 0;
+                                param++;
                         }
-                        final = getchar();
+                        final = key_getc();
+                }
+                if (mod > 1 && ((mod - 1) & 4) && (final == 'C' || final == 'D')) {
+                        return final == 'C' ? KEY_WORD_RIGHT : KEY_WORD_LEFT;
                 }
                 switch (final) {
+                case 'Z':
+                        return KEY_BACKTAB;
                 case 'A':
                         return KEY_ARROW_UP;
                 case 'B':
@@ -211,6 +256,12 @@ int read_char() {
                         return KEY_INS;
                 case 83:
                         return KEY_DEL;
+                case KEY_WORD_LEFT & 0x00ff:
+                        return KEY_WORD_LEFT;
+                case KEY_WORD_RIGHT & 0x00ff:
+                        return KEY_WORD_RIGHT;
+                case KEY_BACKTAB & 0x00ff:
+                        return KEY_BACKTAB;
                 default:
                         return 0;
                 }
@@ -224,6 +275,13 @@ TODO - it seems that this platform is not supported yet -
 #endif
 
 struct str_list history;
+
+/* once: readline_init runs again after each program the shell starts */
+static void history_init(void) {
+        if (history.items == NULL) {
+                str_list_init(&history, 50);
+        }
+}
 
 int read_string(char *line, size_t max_size) {
         int l;
@@ -357,7 +415,7 @@ void readline_init() {
         newt.c_lflag &= ~(ICANON | ECHO);
         tcsetattr(STDIN_FILENO, TCSANOW, &newt);
 #endif
-        str_list_init(&history, 10);
+        history_init();
 }
 
 void readline_deinit() {
@@ -479,9 +537,14 @@ void readline_session_deinit(struct readline_session *session) {
         readline_session_init(session);
 }
 
+/* a line typed is kept unless it is empty, starts with a space or is the
+ * one before */
 static void save_history(struct readline_session *session) {
-        const char *last = str_list_get(&history, session->current_history);
-        bool should_save = session->current_size != 0 && session->line[0] != ' ';
+        const char *last;
+        bool should_save;
+        history_init();
+        last = str_list_get(&history, 0);
+        should_save = session->current_size != 0 && session->line[0] != ' ';
         if (last != NULL) {
                 should_save &= strcmp(last, session->line) != 0;
         }
@@ -490,24 +553,211 @@ static void save_history(struct readline_session *session) {
         }
 }
 
-int readline(struct readline_session *session) {
+/* text put in at the cursor, character by character */
+static void readline_insert_text(struct readline_session *session, const char *text) {
+        while (*text) {
+                size_t n = char_len((unsigned char)*text);
+                if (session->current_size + n >= session->max_size) {
+                        break;
+                }
+                session->current_size = readline_insert_seq(session, text, n);
+                text += n;
+        }
+}
+
+static bool is_space(char c) { return c == ' ' || c == '\t'; }
+
+/* to the start of this word or the one before */
+static void readline_word_left(struct readline_session *session) {
+        while (session->index > 0 && is_space(session->line[session->index - 1])) {
+                readline_move_left(session);
+        }
+        while (session->index > 0 && !is_space(session->line[session->index - 1])) {
+                readline_move_left(session);
+        }
+}
+
+/* to the start of the next word */
+static void readline_word_right(struct readline_session *session) {
+        while (session->index < session->current_size && !is_space(session->line[session->index])) {
+                readline_move_right(session);
+        }
+        while (session->index < session->current_size && is_space(session->line[session->index])) {
+                readline_move_right(session);
+        }
+}
+
+/*
+TAB completes the file or directory name the cursor is in, as cmd.exe
+does: each TAB puts the next name that starts with what was typed there,
+Shift-TAB the one before; names with a space are quoted. Any other key
+keeps the name.
+*/
+struct completion {
+        char **names;
+        size_t count, current;
+        size_t start;  /* the word's first byte in the line */
+        size_t length; /* the bytes of the word there now */
+        char dir[260]; /* the directory part as typed */
+};
+
+static void completion_free(struct completion *c) {
+        size_t i;
+        for (i = 0; i < c->count; i++) {
+                free(c->names[i]);
+        }
+        free(c->names);
+        c->names = NULL;
+        c->count = 0;
+}
+
+#if defined(_POSIX_C_SOURCE) || defined(__APPLE__)
+#if defined(__GONWARE__)
+#define name_ncmp strncasecmp
+#define name_cmp strcasecmp
+#else
+#define name_ncmp strncmp
+#define name_cmp strcmp
+#endif
+
+static int completion_order(const void *a, const void *b) {
+        return name_cmp(*(char *const *)a, *(char *const *)b);
+}
+
+/* the names in the word's directory that start as the word does */
+static bool completion_find(struct completion *c, const struct readline_session *session) {
+        char word[260], opendir_name[260], *prefix;
+        size_t i, n = 0, dirlen = 0, max = 0;
+        bool quote = false;
+        DIR *d;
+        struct dirent *e;
+
+        c->start = 0;
+        for (i = 0; i < session->index; i++) {
+                char ch = session->line[i];
+                if (ch == '"') {
+                        quote = !quote;
+                } else if (!quote && (is_space(ch) || ch == '|' || ch == '<' || ch == '>')) {
+                        c->start = i + 1;
+                }
+        }
+        c->length = session->index - c->start;
+        for (i = c->start; i < session->index && n + 1 < sizeof(word); i++) {
+                if (session->line[i] != '"') {
+                        word[n++] = session->line[i];
+                }
+        }
+        word[n] = 0;
+        for (i = 0; i < n; i++) {
+                if (word[i] == '/' || word[i] == '\\' || word[i] == ':') {
+                        dirlen = i + 1;
+                }
+        }
+        memcpy(c->dir, word, dirlen);
+        c->dir[dirlen] = 0;
+        prefix = word + dirlen;
+        if (dirlen == 0) {
+                strcpy(opendir_name, ".");
+        } else {
+                strcpy(opendir_name, c->dir);
+                /* "A\B\" as "A\B", a root ("\", "C:\", "C:") as it is */
+                if (dirlen > 1 && (c->dir[dirlen - 1] == '/' || c->dir[dirlen - 1] == '\\') &&
+                    c->dir[dirlen - 2] != ':') {
+                        opendir_name[dirlen - 1] = 0;
+                }
+        }
+        d = opendir(opendir_name);
+        if (d == NULL) {
+                return false;
+        }
+        while ((e = readdir(d)) != NULL) {
+                char **more;
+                if (e->d_name[0] == '.' && prefix[0] != '.') {
+                        continue;
+                }
+                if (strcmp(e->d_name, ".") == 0 || strcmp(e->d_name, "..") == 0 ||
+                    name_ncmp(e->d_name, prefix, strlen(prefix)) != 0) {
+                        continue;
+                }
+                if (c->count == max) {
+                        max = max ? max * 2 : 16;
+                        more = realloc(c->names, max * sizeof(char *));
+                        if (more == NULL) {
+                                break;
+                        }
+                        c->names = more;
+                }
+                c->names[c->count] = strdup(e->d_name);
+                if (c->names[c->count] != NULL) {
+                        c->count++;
+                }
+        }
+        closedir(d);
+        if (c->count == 0) {
+                return false;
+        }
+        qsort(c->names, c->count, sizeof(char *), completion_order);
+        return true;
+}
+#else
+static bool completion_find(struct completion *c, const struct readline_session *session) {
+        (void)c;
+        (void)session;
+        return false;
+}
+#endif
+
+/* the word replaced by the current name */
+static void completion_put(struct completion *c, struct readline_session *session) {
+        char text[600];
+        const char *name = c->names[c->current];
+        bool quote = strchr(c->dir, ' ') != NULL || strchr(name, ' ') != NULL;
+        size_t removed = 0;
+
+        snprintf(text, sizeof(text), "%s%s%s%s", quote ? "\"" : "", c->dir, name,
+                 quote ? "\"" : "");
+        while (session->index > c->start) {
+                readline_move_left(session);
+        }
+        while (removed < c->length && session->index < session->current_size) {
+                size_t before = session->current_size;
+                readline_delete_right(session);
+                removed += before - session->current_size;
+        }
+        readline_insert_text(session, text);
+        c->length = session->index - c->start;
+}
+
+static int readline_keys(struct readline_session *session) {
         char seq[4];
         size_t i, n;
+        char *draft = NULL; /* the line typed before going back in the history */
+        struct completion comp;
+        bool completing = false;
+        int result = -2;
+
+        memset(&comp, 0, sizeof(comp));
+        history_init();
         session->line[0] = 0;
-        while (session->index < session->max_size) {
+        session->current_history = 0;
+        while (result == -2 && session->index < session->max_size) {
                 int c = read_char();
+                if (completing && c != '\t' && c != KEY_BACKTAB) {
+                        completion_free(&comp);
+                        completing = false;
+                }
                 switch (c) {
                 case '\r':
-                case '\n': {
+                case '\n':
                         save_history(session);
                         putchar('\n');
-                        return session->current_size;
-                }
-                case 1: /* control +a */
+                        result = (int)session->current_size;
+                        break;
+                case 1: /* control + a */
                 case KEY_HOME:
                         readline_move_home(session);
                         break;
-                case 5: /* control +a */
+                case 5: /* control + e */
                 case KEY_END:
                         readline_move_end(session);
                         break;
@@ -517,22 +767,39 @@ int readline(struct readline_session *session) {
                 case KEY_ARROW_RIGHT:
                         readline_move_right(session);
                         break;
+                case 2: /* control + b */
+                case KEY_WORD_LEFT:
+                        readline_word_left(session);
+                        break;
+                case 6: /* control + f */
+                case KEY_WORD_RIGHT:
+                        readline_word_right(session);
+                        break;
                 case KEY_ARROW_UP: {
-                        const char *last;
-                        save_history(session);
-                        last = str_list_get(&history, session->current_history + 0);
-                        if (last != NULL) {
-                                readline_set(session, last);
+                        /* one line further back; the one typed is kept */
+                        const char *older = str_list_get(&history, session->current_history);
+                        if (older == NULL) {
+                                break;
                         }
+                        if (session->current_history == 0) {
+                                free(draft);
+                                draft = strdup(session->line);
+                        }
+                        session->current_history++;
+                        readline_set(session, older);
                         break;
                 }
                 case KEY_ARROW_DOWN:
-                        if (session->current_history != 0) {
-                                const char *last =
+                        if (session->current_history == 0) {
+                                break;
+                        }
+                        session->current_history--;
+                        if (session->current_history == 0) {
+                                readline_set(session, draft ? draft : "");
+                        } else {
+                                const char *newer =
                                     str_list_get(&history, session->current_history - 1);
-                                if (last != NULL) {
-                                        readline_set(session, last);
-                                }
+                                readline_set(session, newer ? newer : "");
                         }
                         break;
                 case KEY_BACKSPACE:
@@ -540,6 +807,20 @@ int readline(struct readline_session *session) {
                         break;
                 case KEY_DEL:
                         session->index = readline_delete_right(session);
+                        break;
+                case 11: /* control + k: to the end */
+                        while (session->index < session->current_size) {
+                                readline_delete_right(session);
+                        }
+                        break;
+                case 21: /* control + u: to the start */
+                        while (session->index > 0) {
+                                readline_delete_left(session);
+                        }
+                        break;
+                case KEY_ESC: /* the line cleared, as in DOS */
+                        readline_set(session, "");
+                        session->current_history = 0;
                         break;
                 case KEY_INS:
                         session->override = !session->override;
@@ -549,15 +830,43 @@ int readline(struct readline_session *session) {
                                 set_cursor_insert();
                         }
                         break;
-                case 4:
+                case '\t':
+                case KEY_BACKTAB:
+                        if (!completing) {
+                                completing = completion_find(&comp, session);
+                                if (!completing) {
+                                        completion_free(&comp);
+                                        putchar('\a');
+                                        fflush(stdout);
+                                        break;
+                                }
+                                comp.current = c == '\t' ? 0 : comp.count - 1;
+                        } else if (c == '\t') {
+                                comp.current = (comp.current + 1) % comp.count;
+                        } else {
+                                comp.current = (comp.current + comp.count - 1) % comp.count;
+                        }
+                        completion_put(&comp, session);
+                        break;
+                case 3: /* control + c: the line given up */
+                        readline_move_end(session);
+                        fputs("^C\n", stdout);
                         session->current_size = 0;
                         session->line[0] = 0;
-                        return -1;
+                        result = 0;
+                        break;
+                case -1: /* the end of the input */
+                case 4:  /* control + d */
+                        session->current_size = 0;
+                        session->line[0] = 0;
+                        result = -1;
+                        break;
                 case 12:
                         session->current_size = 0;
                         session->line[0] = 0;
                         clear_screen();
-                        return 0;
+                        result = 0;
+                        break;
                 default:
                         if (c <= 0 || c > 0xff || (READLINE_UTF8 && (c & 0xc0) == 0x80)) {
                                 break; /* a key without a character (0: one of no use), a stray
@@ -578,7 +887,60 @@ int readline(struct readline_session *session) {
                         session->current_size = readline_insert_seq(session, seq, n);
                 }
         }
-        return session->current_size;
+        completion_free(&comp);
+        free(draft);
+        return result == -2 ? (int)session->current_size : result;
+}
+
+/* the terminal one key at a time, not echoed, Ctrl-C a key; *saved gets
+ * its mode before (false: no terminal) */
+#if defined(_POSIX_C_SOURCE) || defined(__APPLE__)
+static bool keys_mode(struct termios *saved) {
+        struct termios keys;
+        if (tcgetattr(STDIN_FILENO, saved) != 0) {
+                return false;
+        }
+        keys = *saved;
+        keys.c_lflag &= ~(ICANON | ECHO | ISIG);
+        keys.c_cc[VMIN] = 1;
+        keys.c_cc[VTIME] = 0;
+        tcsetattr(STDIN_FILENO, TCSANOW, &keys);
+        return true;
+}
+#endif
+
+int readline_key(void) {
+        int c;
+#if defined(_POSIX_C_SOURCE) || defined(__APPLE__)
+        struct termios t;
+        bool have = keys_mode(&t);
+#endif
+        fflush(stdout);
+        c = read_char();
+#if defined(_POSIX_C_SOURCE) || defined(__APPLE__)
+        if (have) {
+                tcsetattr(STDIN_FILENO, TCSANOW, &t);
+        }
+#endif
+        return c;
+}
+
+int readline(struct readline_session *session) {
+        int r;
+#if defined(_POSIX_C_SOURCE) || defined(__APPLE__)
+        /* the keys one by one, not echoed; Ctrl-C a key while a line is
+         * typed, not a signal that ends the shell (while a command runs it
+         * stays the signal) */
+        struct termios t;
+        bool have = keys_mode(&t);
+#endif
+        r = readline_keys(session);
+#if defined(_POSIX_C_SOURCE) || defined(__APPLE__)
+        if (have) {
+                tcsetattr(STDIN_FILENO, TCSANOW, &t);
+        }
+#endif
+        return r;
 }
 
 size_t readline_insert_seq(struct readline_session *session, const char *seq, size_t n) {
@@ -647,7 +1009,6 @@ size_t readline_set(struct readline_session *session, const char *new_text) {
         memcpy(session->line, new_text, l);
         session->line[l] = 0;
         session->current_size = l;
-        session->current_history++;
         session->index = l;
         printf("%s", session->line);
         fflush(stdout);

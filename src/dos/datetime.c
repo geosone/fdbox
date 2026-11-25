@@ -9,6 +9,7 @@ For license - read license.txt
  * - support for different date locale (MM/DD/YY vs DD/MM/YY etc).
  */
 #include <ctype.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,8 +18,8 @@ For license - read license.txt
 #include "dos/datetime.h"
 #include "fdbox.h"
 #include "lib/args.h"
-#include "lib/strextra.h"
 #include "lib/nls.h"
+#include "lib/strextra.h"
 
 #ifdef _POSIX_C_SOURCE
 #include <stdbool.h>
@@ -188,44 +189,85 @@ static int date_set_new_date(char *new_date) {
 static void date_print_date() {
         time_t t = time(NULL);
         struct tm *tm = localtime(&t);
-        printf(_("Current date is %02d-%02d-%4d\n"), tm->tm_mday, tm->tm_mon + 1, tm->tm_year + 1900);
+        printf(_("Current date is %02d-%02d-%4d\n"), tm->tm_mday, tm->tm_mon + 1,
+               tm->tm_year + 1900);
+}
+
+/* "hh:mm[:ss[.hh]]" with an optional "am"/"pm" ("a"/"p", with or without
+ * a space before it): 12 am is 0 o'clock, 12 pm noon. false for anything
+ * else or out of range */
+static bool time_parse(const char *s, int *hour, int *minute, int *second) {
+        char *end;
+        long h, m, sec = 0;
+
+        while (isspace((unsigned char)*s)) {
+                s++;
+        }
+        h = strtol(s, &end, 10);
+        if (end == s || *end != ':') {
+                return false;
+        }
+        s = end + 1;
+        m = strtol(s, &end, 10);
+        if (end == s) {
+                return false;
+        }
+        s = end;
+        if (*s == ':') {
+                s++;
+                sec = strtol(s, &end, 10);
+                if (end == s) {
+                        return false;
+                }
+                s = end;
+                if (*s == '.' || *s == ',') { /* hundredths: not kept */
+                        s++;
+                        while (isdigit((unsigned char)*s)) {
+                                s++;
+                        }
+                }
+        }
+        while (isspace((unsigned char)*s)) {
+                s++;
+        }
+        if (*s) {
+                char c = (char)toupper((unsigned char)*s);
+                if ((c != 'A' && c != 'P') || h < 1 || h > 12) {
+                        return false;
+                }
+                s++;
+                if (toupper((unsigned char)*s) == 'M') {
+                        s++;
+                }
+                while (isspace((unsigned char)*s)) {
+                        s++;
+                }
+                if (*s) {
+                        return false;
+                }
+                h = h % 12 + (c == 'P' ? 12 : 0);
+        }
+        if (h < 0 || h > 23 || m < 0 || m > 59 || sec < 0 || sec > 59) {
+                return false;
+        }
+        *hour = (int)h;
+        *minute = (int)m;
+        *second = (int)sec;
+        return true;
 }
 
 static int date_set_new_time(char *new_time) {
-        int hour = -1, minute = -1, second = -1;
-        char *token;
+        int hour, minute, second;
+        const char *p = new_time;
 
-        token = strtok(new_time, ":");
-        hour = token != NULL ? strtol(token, NULL, 10) : -1;
-        token = strtok(NULL, ":");
-        minute = token != NULL ? strtol(token, NULL, 10) : -1;
-        token = strtok(NULL, ":");
-        second = token != NULL ? strtol(token, NULL, 10) : 0;
-        token = strtok(NULL, ":");
-
-#if 0
-        TODO: we cannot support PM/AM yet
-        if (token != NULL && token[0] != '\0') {
-                if (token[2] != '\0') {
-                        return EXIT_FAILURE;
-                }
-                if (toupper(token[1]) != 'M') {
-                        return EXIT_FAILURE;
-                }
-                if (toupper(token[0]) == 'A') {
-                        if (hour > 12) {
-                                return EXIT_FAILURE;
-                        }
-                }
-                if (toupper(token[0]) == 'P') {
-                        if (hour > 12) {
-                                return EXIT_FAILURE;
-                        }
-                        hour += 12;
-                }
+        while (isspace((unsigned char)*p)) {
+                p++;
         }
-#endif
-        if (hour < 0 || minute < 0 || second < 0) {
+        if (*p == 0) {
+                return EXIT_SUCCESS; /* nothing typed: the time stays */
+        }
+        if (!time_parse(new_time, &hour, &minute, &second)) {
+                fputs(_("Invalid time\n"), stderr);
                 return EXIT_FAILURE;
         }
 
@@ -242,7 +284,12 @@ static int date_set_new_time(char *new_time) {
                 new_time = mktime(&tm);
                 tv.tv_sec = new_time;
                 tv.tv_usec = 0;
-                return settimeofday(&tv, NULL);
+                if (settimeofday(&tv, NULL) != 0) {
+                        fprintf(stderr, _("Cannot set the time to %02d:%02d:%02d: %s\n"), hour,
+                                minute, second, strerror(errno));
+                        return EXIT_FAILURE;
+                }
+                return EXIT_SUCCESS;
         }
 #elif defined(__MSDOS__)
         {

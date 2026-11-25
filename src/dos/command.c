@@ -10,6 +10,9 @@ For license - read license.txt
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#if (defined(__GONWARE__) || defined(_POSIX_C_SOURCE)) && !defined(__APPLE__)
+#include <stdio_ext.h> /* __fpurge */
+#endif
 
 #include "lib/applet.h"
 #include "lib/args.h"
@@ -290,14 +293,14 @@ static int execute_command(const char *line) {
                 if (*t == ' ' || *t == '\t')
                         t++;
                 command_args_free(&args);
-                errno = echo_line(t);
+                command_errorlevel = echo_line(t);
                 return EXIT_SUCCESS;
         }
 
         /* FOR takes its command as written, before words are split */
         if (strcasecmp(args.argv[0], "for") == 0) {
                 command_args_free(&args);
-                errno = for_line(line);
+                command_errorlevel = for_line(line);
                 return EXIT_SUCCESS;
         }
 
@@ -325,13 +328,8 @@ static int execute_command(const char *line) {
         }
         if (cmd != NULL) {
                 code = cmd->handler(args.argc, args.argv);
-                errno = code;
-#if !defined(__GONWARE__)
-                /* on GonWare the commands report their errors themselves */
-                if (code != EXIT_SUCCESS) {
-                        fprintf(stderr, _("Command failed (%d)\n"), code);
-                }
-#endif
+                command_errorlevel = code;
+                /* the commands report their errors themselves */
         } else {
                 int err;
 #if defined(__GONWARE__)
@@ -342,7 +340,7 @@ static int execute_command(const char *line) {
                         fprintf(stderr, _("Bad command or file name - %s\n"), args.argv[0]);
                         err = 1;
                 }
-                errno = err; /* the error level */
+                command_errorlevel = err;
 #else
                 readline_deinit();
                 err = spawnvp(P_WAIT, args.argv[0], args.argv);
@@ -428,6 +426,18 @@ static bool redirect_fd(const char *path, int flags, int target, int *saved) {
         return true;
 }
 
+/* stdin as new after a command read a file or pipe on fd 0: what it
+ * buffered of that file is dropped (the next command would read it
+ * first), its end-of-file forgotten */
+static void stdin_reset(void) {
+#if defined(__APPLE__)
+        fpurge(stdin);
+#else
+        __fpurge(stdin);
+#endif
+        clearerr(stdin);
+}
+
 static void redirect_undo(int saved[2]) {
         int i;
 
@@ -436,18 +446,22 @@ static void redirect_undo(int saved[2]) {
                 if (saved[i] >= 0) {
                         dup2(saved[i], i);
                         close(saved[i]);
+                        if (i == 0)
+                                stdin_reset();
                 }
+        /* a command that read the terminal to its end (Ctrl-D) */
+        clearerr(stdin);
 }
 
 /* one command with its redirections; in and out (pipe files) unless the
  * command names its own */
 static int execute_redirected(char *cmd, const char *in, const char *out) {
         struct redirect r;
-        int saved[2] = {-1, -1}, code, level;
+        int saved[2] = {-1, -1}, code;
 
         if (!redirect_parse(cmd, &r)) {
                 fputs(_("Syntax error: a redirection without a file name\n"), stderr);
-                errno = 1;
+                command_errorlevel = 1;
                 return EXIT_SUCCESS;
         }
         if (!*r.in && in)
@@ -461,13 +475,11 @@ static int execute_redirected(char *cmd, const char *in, const char *out) {
             (*r.out && !redirect_fd(r.out, O_WRONLY | O_CREAT | (r.append ? O_APPEND : O_TRUNC), 1,
                                     &saved[1]))) {
                 redirect_undo(saved);
-                errno = 1;
+                command_errorlevel = 1;
                 return EXIT_SUCCESS;
         }
         code = execute_command(cmd);
-        level = errno;
         redirect_undo(saved);
-        errno = level;
         return code;
 }
 
@@ -499,7 +511,7 @@ int command_execute_line(const char *line) {
                 else if (*s == '|') {
                         if (n == PIPE_STAGES) {
                                 fputs(_("Too many pipes\n"), stderr);
-                                errno = 1;
+                                command_errorlevel = 1;
                                 return EXIT_SUCCESS;
                         }
                         *s = 0;
@@ -611,9 +623,30 @@ static void command_shell_print_extended_help() {
 /* read line */
 bool is_interactive() { return isatty(fileno(stdin)); }
 
+/* The shell's own input when it is not a terminal (a script piped in): a
+ * FILE of its own on a copy of fd 0. stdin stays the commands': lines the
+ * shell has read ahead are not what "SORT < X" or a pipe gives a command,
+ * and a command that reads stdin does not take the shell's lines from
+ * its buffer. */
+static FILE *shell_input(void) {
+#if defined(__GONWARE__) || defined(_POSIX_C_SOURCE) || defined(__APPLE__)
+        static FILE *in;
+        if (in == NULL) {
+                int fd = dup(0);
+                in = fd >= 0 ? fdopen(fd, "r") : NULL;
+                if (in == NULL) {
+                        in = stdin;
+                }
+        }
+        return in;
+#else
+        return stdin;
+#endif
+}
+
 int read_line_simple(char line[], int max_size) {
         line[0] = 0;
-        if (fgets(line, max_size, stdin) == NULL) {
+        if (fgets(line, max_size, shell_input()) == NULL) {
                 return -1; /* end of input (EOF) or a read error */
         }
         return strlen(line);

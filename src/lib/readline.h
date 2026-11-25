@@ -29,6 +29,10 @@
 #define KEY_BACKSPACE       '\b'
 #define KEY_INS             0x00f8
 #define KEY_DEL             0x00ff
+#define KEY_WORD_LEFT       0x7f73
+#define KEY_WORD_RIGHT      0x7f74
+#define KEY_BACKTAB         0x7f0f
+#define KEY_ESC             0x001b
 /* clang-format on */
 
 /* moves the cursor to the left */
@@ -36,6 +40,9 @@ void move_cursor_back(size_t n);
 
 /* read a single characrer, without enter */
 int read_char();
+
+/* one key, waited for (a terminal in its mode for keys meanwhile) */
+int readline_key(void);
 
 /* old API - to be removed soon */
 int read_string(char *line, size_t max_size);

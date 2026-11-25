@@ -40,7 +40,14 @@ https://github.com/tproffen/DiffuseCode/blob/master/lib_f90/win32-glob.c
 #include <fcntl.h>
 #include <glob.h>
 #include <stdbool.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
+#if !defined(__GONWARE__)
+#include <sys/statvfs.h>
 #endif
+#endif
+
+#include "lib/readline.h"
 
 #ifdef __WIN32__
 #include "lib/win32/dirent.h"
@@ -63,11 +70,10 @@ https://github.com/tproffen/DiffuseCode/blob/master/lib_f90/win32-glob.c
  * Types used internally
  ***************************************************************************/
 
-#define SORT_NAME 0x01
-#define SORT_EXTENTION 0x02
-#define SORT_DIRS 0x04
-#define SORT_DATE 0x08
-#define SORT_SIZE 0x10
+/* /O: the keys in order, an upper case letter ascending (N name, E
+ * extension, S size smallest first, D date oldest first, G directories
+ * first), a lower case one reversed ("-" before it) */
+#define SORT_KEYS 8
 
 #define MAX_DIR_FILES 128
 #define MAX_DIR_ENTRY_FILES 1024
@@ -76,7 +82,7 @@ struct dir_config {
         bool show_help;
         bool pause;
         bool wide;
-        int sort_order;
+        char sort_keys[SORT_KEYS];
         bool subdirs;
         bool bare;
         bool lower_case;
@@ -115,14 +121,11 @@ static bool dir_parse_config(int argc, char *argv[], struct dir_config *config);
 static void dir_format_date_time(long ff_date, long ff_time, char *time, char *date);
 static void dir_print_extended_help();
 
-static int dir_file_order;
+static const char *dir_sort_keys;
 static int dir_file_comperator(const void *a, const void *b);
+static bool dir_parse_sort(const char *arg, char keys[SORT_KEYS]);
 
 static bool found(const char *file_name, const struct file_entry files[], size_t file_count);
-
-/* TODO - should this be moved to a library? */
-static bool flag_test(int value, int flag);
-static void flag_set(int *value, int flag, bool on);
 
 /***************************************************************************
  * This is public API
@@ -154,7 +157,7 @@ int command_dir(int argc, char *argv[]) {
                 config.global.files.count = 1;
         }
 
-#if defined(__GONWARE__)
+#if defined(__GONWARE__) || defined(_POSIX_C_SOURCE) || defined(__APPLE__)
         {
                 /* as in DOS: "DIR D:" and "DIR NAME" of a directory list its files */
                 static char patterns[ARG_MAX_FILES][260];
@@ -167,9 +170,10 @@ int command_dir(int argc, char *argv[]) {
                         struct stat st;
                         l = strlen(f);
                         if (l && strchr(":\\/", f[l - 1]))
-                                snprintf(patterns[i], sizeof(patterns[i]), "%s*.*", f);
+                                snprintf(patterns[i], sizeof(patterns[i]), "%s" ALL_FILES_GLOB, f);
                         else if (!strpbrk(f, "*?") && !stat(f, &st) && S_ISDIR(st.st_mode))
-                                snprintf(patterns[i], sizeof(patterns[i]), "%s\\*.*", f);
+                                snprintf(patterns[i], sizeof(patterns[i]),
+                                         "%s" DIRECTORY_DELIMITER ALL_FILES_GLOB, f);
                         else
                                 snprintf(patterns[i], sizeof(patterns[i]), "%s", f);
                         config.global.files.file[i] = patterns[i];
@@ -210,6 +214,30 @@ int command_dir(int argc, char *argv[]) {
         return EXIT_SUCCESS;
 }
 
+/* the rows of the terminal on stdout (25 when it is not one) */
+static int dir_rows(void) {
+#if defined(_POSIX_C_SOURCE) || defined(__APPLE__)
+        struct winsize w;
+        if (ioctl(1, TIOCGWINSZ, &w) == 0 && w.ws_row > 2) {
+                return w.ws_row;
+        }
+#endif
+        return 25;
+}
+
+/* the bytes free on the volume of path, -1 when that is not known */
+static long long dir_free(const char *path) {
+#if (defined(_POSIX_C_SOURCE) || defined(__APPLE__)) && !defined(__GONWARE__)
+        struct statvfs v;
+        if (statvfs(path, &v) == 0) {
+                return (long long)v.f_bavail * (long long)v.f_frsize;
+        }
+#else
+        (void)path;
+#endif
+        return -1;
+}
+
 static void dir_display_dir(struct dir_config *config, const char *dir_name,
                             struct command_glob *files2, int depth) {
         /* then find all available files */
@@ -218,7 +246,8 @@ static void dir_display_dir(struct dir_config *config, const char *dir_name,
         size_t i, j;
 
         long long int total_bytes = 0;
-        long long int free_bytes = 0;
+        long long int free_bytes = dir_free(dir_name);
+        int rows = dir_rows();
         int total_files = 0;
         int total_dirs = 0;
         int lines = 0;
@@ -259,8 +288,8 @@ static void dir_display_dir(struct dir_config *config, const char *dir_name,
         }
 
         /* and sort if needed */
-        if (config->sort_order != 0) {
-                dir_file_order = config->sort_order;
+        if (config->sort_keys[0] != 0) {
+                dir_sort_keys = config->sort_keys;
                 qsort(files, file_count, sizeof(struct file_entry), dir_file_comperator);
         }
 
@@ -317,6 +346,9 @@ static void dir_display_dir(struct dir_config *config, const char *dir_name,
                                 lines++;
                                 putchar('\n');
                         }
+                } else if (config->bare) {
+                        puts(display);
+                        lines++;
                 } else {
                         char *ttime = ctime(&files[i].file_details.st_mtime);
                         if (S_ISDIR(files[i].file_details.st_mode)) {
@@ -328,13 +360,13 @@ static void dir_display_dir(struct dir_config *config, const char *dir_name,
                         lines++;
                 }
 
-                /* TODO read terminal height in runtime */
-                /* TODO convert to press any key */
-                /* https://stackoverflow.com/questions/18801483/press-any-key-to-continue-function-in-c/18801616
-                 */
-                if (config->pause && lines == 24) {
-                        fputs(_("Press enter to continue...\n"), stdout);
-                        getchar();
+                /* a screen full: a key goes on (only on a terminal) */
+                if (config->pause && lines >= rows - 2 && isatty(1)) {
+                        fputs(_("Press any key to continue . . ."), stdout);
+                        fflush(stdout);
+                        readline_key();
+                        putchar('\n');
+                        lines = 0;
                 }
 
                 if (config->subdirs && !S_ISDIR(files[i].file_details.st_mode)) {
@@ -347,7 +379,11 @@ static void dir_display_dir(struct dir_config *config, const char *dir_name,
         }
         if (!config->bare) {
                 printf(_("%10d files(s)\t %lld bytes\n"), total_files, total_bytes);
-                printf(_("%10d dirs(s) \t %lld free\n"), total_dirs, free_bytes);
+                if (free_bytes >= 0) {
+                        printf(_("%10d dirs(s) \t %lld free\n"), total_dirs, free_bytes);
+                } else {
+                        printf(_("%10d dirs(s)\n"), total_dirs);
+                }
         }
         for (i = 0; i < file_count; i++) {
                 if (config->subdirs) {
@@ -382,7 +418,7 @@ static void dir_config_init(struct dir_config *config) {
         config->pause = false;
         config->wide = false;
         config->bare = false;
-        config->sort_order = 0;
+        config->sort_keys[0] = 0;
         config->lower_case = false;
         config->subdirs = false;
         config->show_help = false;
@@ -395,25 +431,7 @@ static void dir_config_print(struct dir_config *config) {
         printf("\tsubdirs=%s\n", str_bool(config->subdirs));
         printf("\tlower_case=%s\n", str_bool(config->lower_case));
 
-        printf("\tsort=");
-        if (flag_test(config->sort_order, SORT_NAME)) {
-                printf("name ");
-        }
-        if (flag_test(config->sort_order, SORT_EXTENTION)) {
-                printf("extension ");
-        }
-        if (flag_test(config->sort_order, SORT_DIRS)) {
-                printf("directories ");
-        }
-        if (flag_test(config->sort_order, SORT_DATE)) {
-                printf("date ");
-        }
-        if (flag_test(config->sort_order, SORT_SIZE)) {
-                printf("size ");
-        }
-        if (config->sort_order == 0) {
-                printf("UNSORTED");
-        }
+        printf("\tsort=%s", config->sort_keys[0] ? config->sort_keys : "UNSORTED");
         putchar('\n');
 
         command_config_print(&config->global);
@@ -467,24 +485,8 @@ static bool dir_parse_config(int argc, char *argv[], struct dir_config *config) 
                 case 'o':
                         argument = argv[config->global.state.current_argument - 1];
                         c2 = tolower(argument[2]);
-                        switch (c2) {
-                        case 'n':
-                                flag_set(&config->sort_order, SORT_NAME, true);
-                                break;
-                        case 'e':
-                                flag_set(&config->sort_order, SORT_EXTENTION, true);
-                                break;
-                        case 'g':
-                                flag_set(&config->sort_order, SORT_DIRS, true);
-                                break;
-                        case 'd':
-                                flag_set(&config->sort_order, SORT_DATE, true);
-                                break;
-                        case 's':
-                                flag_set(&config->sort_order, SORT_SIZE, true);
-                                break;
-                        default:
-                                printf(_("invalid sort argument %c/\n"), c2);
+                        if (!dir_parse_sort(argument + 2, config->sort_keys)) {
+                                printf(_("invalid sort argument %s\n"), argument);
                                 return false;
                         }
                         break;
@@ -512,9 +514,11 @@ static void dir_print_extended_help() {
         fputs(_("   /a[] filter files by attributes\n"), stdout);
         fputs(_("       /ad - directories    /ar - readonly   /ah - hidden\n"), stdout);
         fputs(_("       /as - system files\n"), stdout);
-        fputs(_("   /o[esdng] sort files\n"), stdout);
-        fputs(_("       /oe - extension       /os - by name    /od - date\n"), stdout);
-        fputs(_("       /on - by size         /og - directories first \n"), stdout);
+        fputs(_("   /o[-][nesdg]... sort files, the keys in order (- reverses the next)\n"),
+              stdout);
+        fputs(_("       /on - by name         /oe - extension  /od - date (oldest first)\n"),
+              stdout);
+        fputs(_("       /os - by size         /og - directories first; /o alone: /ogn\n"), stdout);
         fputs(_("Examples:\n"), stdout);
         fputs(_("> dir /w /os *.exe\n"), stdout);
         fputs(_("> dir /p /b *.txt *.com\n"), stdout);
@@ -542,65 +546,71 @@ static void dir_format_date_time(long ff_fdate, long ff_ftime, char *time, char 
 static int dir_file_comperator(const void *a, const void *b) {
         const struct file_entry *file1 = (const struct file_entry *)(a);
         const struct file_entry *file2 = (const struct file_entry *)(b);
+        bool dir1 = S_ISDIR(file1->file_details.st_mode);
+        bool dir2 = S_ISDIR(file2->file_details.st_mode);
+        const char *k;
 
-        int order = 0;
-        if (flag_test(dir_file_order, SORT_DIRS)) {
-                if (S_ISDIR(file1->file_details.st_mode) && !S_ISDIR(file2->file_details.st_mode)) {
-                        order -= 10;
+        for (k = dir_sort_keys; *k; k++) {
+                int v = 0;
+                switch (toupper((unsigned char)*k)) {
+                case 'N':
+                        v = strcasecmp(file_base_name(file1->file_name),
+                                       file_base_name(file2->file_name));
+                        break;
+                case 'E':
+                        v = strcasecmp(file_get_extension(file1->file_name),
+                                       file_get_extension(file2->file_name));
+                        break;
+                case 'S': {
+                        /* a directory as 0 bytes, as DOS shows it */
+                        long long s1 = dir1 ? 0 : (long long)file1->file_details.st_size;
+                        long long s2 = dir2 ? 0 : (long long)file2->file_details.st_size;
+                        v = s1 < s2 ? -1 : s1 > s2 ? 1 : 0;
+                        break;
                 }
-                if (!S_ISDIR(file1->file_details.st_mode) && S_ISDIR(file2->file_details.st_mode)) {
-                        order += 10;
+                case 'D':
+                        v = file1->file_details.st_mtime < file2->file_details.st_mtime   ? -1
+                            : file1->file_details.st_mtime > file2->file_details.st_mtime ? 1
+                                                                                          : 0;
+                        break;
+                case 'G':
+                        v = dir1 == dir2 ? 0 : dir1 ? -1 : 1;
+                        break;
                 }
-        }
-        if (flag_test(dir_file_order, SORT_SIZE)) {
-                if (S_ISDIR(file1->file_details.st_mode) && !S_ISDIR(file2->file_details.st_mode)) {
-                        order--;
-                } else if (!S_ISDIR(file1->file_details.st_mode) &&
-                           S_ISDIR(file2->file_details.st_mode)) {
-                        order++;
-                } else if (!S_ISDIR(file1->file_details.st_mode) &&
-                           !S_ISDIR(file2->file_details.st_mode)) {
-                        if (file1->file_details.st_size > file2->file_details.st_size) {
-                                order--;
-                        } else if (file1->file_details.st_size < file2->file_details.st_size) {
-                                order++;
-                        }
-                }
-        }
-        if (flag_test(dir_file_order, SORT_DATE)) {
-                if (file1->file_details.st_mtime > file2->file_details.st_mtime) {
-                        order++;
-                }
-                if (file1->file_details.st_mtime < file2->file_details.st_mtime) {
-                        order--;
-                }
-        }
-        if (flag_test(dir_file_order, SORT_NAME)) {
-                int v;
-                /* TODO - config should be global, and we should use it here */
-                /* v = strcmp(file1->file_name, file2->file_name); */
-                v = strcasecmp(file1->file_name, file2->file_name);
-                if (v > 0) {
-                        order += 2;
-                }
-                if (v < 0) {
-                        order -= 2;
+                if (v != 0) {
+                        return islower((unsigned char)*k) ? -v : v;
                 }
         }
-        if (flag_test(dir_file_order, SORT_EXTENTION)) {
-                const char *ext1, *ext2;
-                int v;
-                ext1 = file_get_extension(file1->file_name);
-                ext2 = file_get_extension(file2->file_name);
-                v = strcasecmp(ext1, ext2);
-                if (v > 0) {
-                        order += 2;
-                }
-                if (v < 0) {
-                        order -= 2;
-                }
+        return 0;
+}
+
+/* the letters of /O (after the O): keys as dir_file_comperator takes
+ * them; /O alone is /OGN, directories first and then by name */
+static bool dir_parse_sort(const char *arg, char keys[SORT_KEYS]) {
+        size_t n = 0;
+        bool reverse = false;
+
+        if (*arg == ':') {
+                arg++;
         }
-        return order;
+        if (*arg == 0) {
+                strcpy(keys, "GN");
+                return true;
+        }
+        for (; *arg; arg++) {
+                char c = (char)toupper((unsigned char)*arg);
+                if (c == '-') {
+                        reverse = true;
+                        continue;
+                }
+                if (!strchr("NESDG", c) || n + 1 >= SORT_KEYS) {
+                        return false;
+                }
+                keys[n++] = reverse ? (char)tolower((unsigned char)c) : c;
+                reverse = false;
+        }
+        keys[n] = 0;
+        return n > 0;
 }
 
 static bool found(const char *file_name, const struct file_entry files[], size_t file_count) {
@@ -611,14 +621,4 @@ static bool found(const char *file_name, const struct file_entry files[], size_t
                 }
         }
         return false;
-}
-
-static bool flag_test(int value, int flag) { return (value & flag) != 0; }
-
-static void flag_set(int *value, int flag, bool on) {
-        if (on) {
-                *value |= flag;
-        } else {
-                *value ^= !flag;
-        }
 }

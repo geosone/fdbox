@@ -63,10 +63,104 @@ static char *copy_move_append_path(const char *directory, const char *file_name)
 static int copy_single_file(const char *from, const char *to, struct copy_config *config);
 static int move_single_file(const char *from, const char *to, struct copy_config *config);
 
+/* the files a name or pattern stands for; 0 when none */
+static size_t copy_move_glob(const char *pattern, glob_t *g) {
+        memset(g, 0, sizeof(*g));
+        if (glob(pattern, GLOB_DOOFFS, NULL, g) != 0) {
+                return 0;
+        }
+        return g->gl_pathc;
+}
+
+/* COPY A+B[+...] [TO]: the files one after another into TO; without TO
+ * (or with TO the first of them) the others appended to the first */
+static int copy_concat(int nsrc, char *src[], const char *to) {
+        char parts[1024], *part, *next;
+        FILE *out;
+        size_t i, n, k = 0;
+        int rc = EXIT_SUCCESS;
+        char buffer[4096];
+        bool append;
+
+        parts[0] = 0;
+        for (i = 0; i < (size_t)nsrc; i++) {
+                if (strlen(parts) + strlen(src[i]) + 2 > sizeof(parts)) {
+                        fputs(_("Error: the command is too long\n"), stderr);
+                        return EXIT_FAILURE;
+                }
+                strcat(parts, src[i]);
+                strcat(parts, "+");
+        }
+        part = parts;
+        while (*part == '+') {
+                part++;
+        }
+        next = strchr(part, '+');
+        *next = 0;
+        if (*part == 0) {
+                fputs(_("Error: no source file provided\n"), stderr);
+                return EXIT_FAILURE;
+        }
+        if (to == NULL) {
+                to = part;
+        }
+        append = strcmp(to, part) == 0;
+        out = fopen(to, append ? "ab" : "wb");
+        if (out == NULL) {
+                fprintf(stderr, _("Cannot open %s\n"), to);
+                return EXIT_FAILURE;
+        }
+        for (;;) {
+                glob_t g;
+                if (k++ == 0 && append) {
+                        goto next_part; /* the file appended to */
+                }
+                if (copy_move_glob(part, &g) == 0) {
+                        fprintf(stderr, _("File not found - %s\n"), part);
+                        rc = EXIT_FAILURE;
+                }
+                for (i = 0; i < g.gl_pathc; i++) {
+                        FILE *in = fopen(g.gl_pathv[i], "rb");
+                        if (in == NULL) {
+                                fprintf(stderr, _("Cannot open %s\n"), g.gl_pathv[i]);
+                                rc = EXIT_FAILURE;
+                                continue;
+                        }
+                        while ((n = fread(buffer, 1, sizeof(buffer), in)) > 0) {
+                                if (fwrite(buffer, 1, n, out) != n) {
+                                        rc = EXIT_FAILURE;
+                                        break;
+                                }
+                        }
+                        fclose(in);
+                }
+                globfree(&g);
+        next_part:
+                /* the next part; empty ones ("A + B" gives "A++B") skipped */
+                part = next + 1;
+                while (*part == '+') {
+                        part++;
+                }
+                if (*part == 0) {
+                        break;
+                }
+                next = strchr(part, '+');
+                *next = 0;
+        }
+        if (fclose(out) != 0) {
+                rc = EXIT_FAILURE;
+        }
+        return rc;
+}
+
+/* COPY/MOVE source... [to]: each source a name or pattern; several files go
+ * into a directory; without "to" into the current directory */
 static int command_move_copy(int argc, char *argv[], struct copy_config *config) {
-        int return_val = EXIT_SUCCESS;
-        size_t j;
-        glob_t globbuf = {0};
+        int rc = EXIT_SUCCESS;
+        size_t nsrc, i, j, total = 0;
+        const char *dest;
+        char **files;
+        bool concat = false;
 
         copy_move_config_init(config);
         copy_move_parse_config(argc, argv, config);
@@ -74,50 +168,75 @@ static int command_move_copy(int argc, char *argv[], struct copy_config *config)
 
         if (config->global.show_help) {
                 if (config->move_files) {
-                        copy_print_extended_help();
-                } else {
                         move_print_extended_help();
+                } else {
+                        copy_print_extended_help();
                 }
                 return EXIT_SUCCESS;
         }
-
-        if (config->source_file == NULL || config->source_file[0] == '\0') {
+        if (config->global.files.count == 0) {
                 fputs(_("Error: no source file provided\n"), stderr);
                 return EXIT_FAILURE;
         }
-
-        if (config->dest_file == NULL || config->dest_file[0] == '\0') {
-                fputs(_("Error: no destination file provided\n"), stderr);
+        files = (char **)config->global.files.file;
+        nsrc = config->global.files.count == 1 ? 1 : config->global.files.count - 1;
+        dest = config->global.files.count == 1 ? NULL : files[nsrc];
+        for (i = 0; i < nsrc; i++) {
+                concat |= strchr(files[i], '+') != NULL;
+        }
+        if (dest != NULL && strcmp(dest, "+") != 0 && strchr(dest, '+') != NULL) {
+                concat = true; /* "COPY A +B": all sources */
+                nsrc++;
+                dest = NULL;
+        }
+        if (concat && !config->move_files) {
+                return copy_concat((int)nsrc, files, dest);
+        }
+        if (dest == NULL) {
+                dest = ".";
+        }
+        for (i = 0; i < nsrc; i++) {
+                glob_t g;
+                total += copy_move_glob(files[i], &g);
+                globfree(&g);
+        }
+        if (total > 1 && !copy_move_is_dir(dest)) {
+                fprintf(stderr, _("Error: %s is not a directory, several files cannot go there\n"),
+                        dest);
                 return EXIT_FAILURE;
         }
+        for (i = 0; i < nsrc; i++) {
+                glob_t g;
+                if (copy_move_glob(files[i], &g) == 0) {
+                        fprintf(stderr, _("File not found - %s\n"), files[i]);
+                        rc = EXIT_FAILURE;
+                }
+                for (j = 0; j < g.gl_pathc; j++) {
+                        const char *from_file = g.gl_pathv[j];
+                        const char *target_name = dest;
+                        bool free_memory = false;
+                        int r;
 
-        glob(config->source_file, GLOB_DOOFFS, NULL, &globbuf);
-        for (j = 0; j != globbuf.gl_pathc; j++) {
-                const char *from_file = globbuf.gl_pathv[j];
-                const char *target_name;
-                bool free_memory = false;
-
-                target_name = config->dest_file;
-                if (copy_move_is_dir(target_name)) {
-                        const char *base_name = file_base_name(from_file);
-                        target_name = copy_move_append_path(target_name, base_name);
-                        free_memory = true;
+                        if (copy_move_is_dir(dest)) {
+                                target_name =
+                                    copy_move_append_path(dest, file_base_name(from_file));
+                                free_memory = true;
+                        }
+                        if (config->move_files) {
+                                r = move_single_file(from_file, target_name, config);
+                        } else {
+                                r = copy_single_file(from_file, target_name, config);
+                        }
+                        if (free_memory) {
+                                free((char *)target_name);
+                        }
+                        if (r != EXIT_SUCCESS) {
+                                rc = EXIT_FAILURE;
+                        }
                 }
-
-                if (config->move_files) {
-                        return_val = move_single_file(from_file, target_name, config);
-                } else {
-                        return_val = copy_single_file(from_file, target_name, config);
-                }
-                if (free_memory) {
-                        free((char *)target_name);
-                }
-                if (return_val != EXIT_SUCCESS) {
-                        break;
-                }
+                globfree(&g);
         }
-        globfree(&globbuf);
-        return return_val;
+        return rc;
 }
 
 int command_copy(int argc, char *argv[]) {
@@ -191,7 +310,7 @@ static bool copy_move_parse_config(int argc, char *argv[], struct copy_config *c
         config->source_file = config->global.files.file[0];
         config->dest_file = config->global.files.file[1];
 
-        return false;
+        return true;
 }
 
 static void copy_move_print_config(struct copy_config *config) {
@@ -204,7 +323,8 @@ static void copy_move_print_config(struct copy_config *config) {
 
 static void copy_print_extended_help() {
         printf("%s\n", help_copy());
-        fputs(_("   copy [from] [to] /a /y /v\n"), stdout);
+        fputs(_("   copy [from...] [to] /a /y /v\n"), stdout);
+        fputs(_("   copy a+b[+...] [to]  joins files (without to: onto a)\n"), stdout);
 
         fputs(_("   /a Copy attributes\n"), stdout);
         fputs(_("   /y Ask for confirmation on overwrite (WIP)\n"), stdout);
@@ -215,7 +335,7 @@ static void copy_print_extended_help() {
 }
 
 static void move_print_extended_help() {
-        printf("%s\n", help_copy());
+        printf("%s\n", help_move());
         fputs(_("   move [from] [to] /a /y /v\n"), stdout);
 
         fputs(_("   /y Ask for confirmation on overwrite (WIP)\n"), stdout);
@@ -237,7 +357,7 @@ static char *copy_move_append_path(const char *directory, const char *file_name)
         char *full_file_name;
 
         /* does the directory end with / or  \\ ? */
-        full_file_name = malloc(l1 + l2 + 1);
+        full_file_name = malloc(l1 + l2 + 2); /* a delimiter, the NUL */
         strcpy(full_file_name, directory);
         if (directory[l1 - 1] == '/' || directory[l1 - 1] == '\\') {
                 strcat(full_file_name, file_name);

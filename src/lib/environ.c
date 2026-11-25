@@ -33,8 +33,13 @@ For license - read license.txt
  * http://wiki.freedos.org/wiki/index.php/Prompt
  */
 
+/* the error level: what the last command ended with (IF ERRORLEVEL, $?
+ * in the prompt); its own variable, as any call into the C library may
+ * change errno */
+int command_errorlevel = 0;
+
 char *get_prompt(const char *prompt, char prompt_string[], size_t prompt_str_len) {
-        int save_errno = errno;
+        int save_errno = command_errorlevel;
         while (*prompt) {
                 switch (*prompt) {
                 case '$':

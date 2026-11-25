@@ -14,8 +14,8 @@ For license - read license.txt
 #include "dos/batch.h"
 #include "dos/command.h"
 #include "dos/prompt.h"
-#include "lib/environ.h"
 #include "fdbox.h"
+#include "lib/environ.h"
 #include "lib/nls.h"
 
 extern bool echo_is_on;
@@ -183,10 +183,10 @@ int batch_run(const char *path, int argc, char *argv[]) {
                         get_prompt(t ? t : "$P$G", prompt, sizeof(prompt));
                         printf("%s%s\n", prompt, l);
                 }
-                errno = level;
+                command_errorlevel = level;
                 if (command_execute_line(l) != EXIT_SUCCESS)
                         b.done = true; /* EXIT ends the batch file */
-                level = errno;
+                level = command_errorlevel;
         }
 
         batch_current = b.parent;
@@ -195,7 +195,7 @@ int batch_run(const char *path, int argc, char *argv[]) {
         for (size_t k = 0; k < b.count; k++)
                 free(b.lines[k]);
         free(b.lines);
-        errno = level;
+        command_errorlevel = level;
         return level;
 }
 

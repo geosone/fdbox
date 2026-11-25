@@ -38,7 +38,7 @@ char *str_ins_char(char *s, size_t max_length, char c, size_t index) {
 bool str_is_prefix(const char *str, const char *pre) { return strncmp(pre, str, strlen(pre)) == 0; }
 
 bool str_ends_with(const char *str, char c) {
-        char *cc = strrchr(str, c);
+        const char *cc = strrchr(str, c);
         if (cc == NULL) {
                 return false;
         }
@@ -62,7 +62,8 @@ const char *file_base_name(const char *file_name) {
 }
 
 char *file_get_dir(const char *file_name) {
-        char *c, *d;
+        const char *c;
+        char *d;
         int length;
 
         c = strrchr(file_name, '/');
@@ -76,23 +77,22 @@ char *file_get_dir(const char *file_name) {
         length = c - file_name;
         d = malloc(length + 1);
         strncpy(d, file_name, length);
-        d[length+1] = 0;
+        d[length + 1] = 0;
         return d;
 }
 
 /* lets assume extensions are 3 letters only for now */
+/* the extension of the file name (after its last dot), "" for a name
+ * without one; a dot of a directory in the path does not count */
 const char *file_get_extension(const char *fname) {
-        const char *p = fname;
-        while (*p) {
-                p++;
-        }
-        while (p != fname && *p != '.') {
+        const char *end = fname + strlen(fname), *p = end;
+        while (p != fname && p[-1] != '.' && p[-1] != '/' && p[-1] != '\\' && p[-1] != ':') {
                 p--;
         }
-        if (*p == '.') {
-                p++;
+        if (p != fname && p[-1] == '.') {
+                return p;
         }
-        return p;
+        return end;
 }
 
 #if defined(__WIN32__)

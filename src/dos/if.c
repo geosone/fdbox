@@ -13,8 +13,8 @@ For license - read license.txt
 #include "dos/if.h"
 #include "fdbox.h"
 #include "lib/environ.h"
-#include "lib/strextra.h"
 #include "lib/nls.h"
+#include "lib/strextra.h"
 
 #if defined(_POSIX_C_SOURCE) || defined(__APPLE__)
 #include <glob.h>
@@ -48,7 +48,7 @@ int command_if(int argc, char *argv[]) {
         char *command_to_execute;
         int arg_index = 1;
         int rc = EXIT_FAILURE;
-        int save_errno = errno;
+        int save_errno = command_errorlevel;
 
         if (strcasecmp(argv[arg_index], "not") == 0) {
                 reverse_token = true;
@@ -113,11 +113,11 @@ int command_if(int argc, char *argv[]) {
          * the one before */
         rc = save_errno;
         if (command_to_execute != NULL) {
-                errno = save_errno;
+                command_errorlevel = save_errno;
                 if (command_execute_line(command_to_execute) != EXIT_SUCCESS)
                         rc = save_errno; /* EXIT */
                 else
-                        rc = errno;
+                        rc = command_errorlevel;
                 free(command_to_execute);
         }
         return rc;

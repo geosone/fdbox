@@ -78,51 +78,61 @@ See also:
 * see also implementation tables bellow
 
 ## Implementation status of commands
-| command               | status  | remark                                                                                                                                                                                              |
-|-----------------------|---------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `beep`                | *done*  | needs to be tested on DOS/Windows, on unix it just beeps                                                                                                                                            |
-| `call`                | not yet |                                                                                                                                                                                                     |
-| `cd`                  | *done*  |                                                                                                                                                                                                     |
-| `cls`                 | *done*  |                                                                                                                                                                                                     |
-| `copy`                | WIP     | All copies are binaries. By design. <br> Recursive copy not implemented yet <br> Copy globs, and several files - not implemented yet <br> Append files (copy file1+file2 file3) not implemented yet |
-| `command`             | WIP     | See bellow                                                                                                                                                                                          |
-| `date`/`time`         | WIP     | Missing AM/PM support <br> Not supported on windows (only DOS/Linux)                                                                                                                                |
-| `del`                 | *done*  | Prompt might need more testing                                                                                                                                                                      |
-| `dir`                 | WIP     | `/o?` order is funky. <br> `/p` - pausing is not implemented <br> Missing disk usage                                                                                                                |
-| `echo`                | *done*  |                                                                                                                                                                                                     |
-| `if`                  | *done*  |                                                                                                                                                                                                     |
-| `for`                 | not yet |                                                                                                                                                                                                     |
-| `md`/`mkdir`          | *done*  |                                                                                                                                                                                                     |
-| `move`/`rename`/`ren` | *done*  | All these command are aliases, hardcoded                                                                                                                                                            |
-| `prompt`              | *done*  | internal library issues                                                                                                                                                                             |
-| `rem`                 | *done*  |                                                                                                                                                                                                     |
-| `set`                 | *done*  |                                                                                                                                                                                                     |
-| `type`                | *done*  | Bonus: support also line numbers printing                                                                                                                                                           |
-| `type`                | *done*  | As a bonus, can also print line numbers                                                                                                                                                             |
-| `ver`                 | *done*  |                                                                                                                                                                                                     |
+| command                 | status  | remark                                                                                                     |
+|-------------------------|---------|------------------------------------------------------------------------------------------------------------|
+| `beep`                  | *done*  | needs to be tested on DOS/Windows, on unix it just beeps                                                   |
+| `call`                  | *done*  |                                                                                                            |
+| `cd`/`chdir`            | *done*  |                                                                                                            |
+| `cls`                   | *done*  |                                                                                                            |
+| `copy`                  | *done*  | Binary copies by design. Patterns, several sources into a directory, `copy a+b c` and `copy a+b` (onto a), without a target into the current directory. No recursive copy (that is XCOPY's) |
+| `command`               | *done*  | the shell: pipes, redirections, batch files, error levels                                                  |
+| `date`/`time`           | *done*  | `time` reads `hh:mm[:ss]` with am/pm. Setting them is not supported on Windows                            |
+| `del`/`erase`           | *done*  | a directory: its files (DOS); `/r` the tree too                                                            |
+| `dir`                   | *done*  | `/o[-][nesdg]...` sort keys in order (`/o` alone: `/ogn`), `/p` pauses a screen (a key goes on), `/b` names only, the free space (not yet on GonWare and DOS) |
+| `echo`                  | *done*  |                                                                                                            |
+| `for`                   | *done*  |                                                                                                            |
+| `if`                    | *done*  |                                                                                                            |
+| `md`/`mkdir`            | *done*  | `/r` (`mkdir -p`) the parents too                                                                          |
+| `move`/`rename`/`ren`   | *done*  | All these command are aliases, hardcoded                                                                   |
+| `prompt`                | *done*  |                                                                                                            |
+| `rd`/`rmdir`            | *done*  |                                                                                                            |
+| `rem`                   | *done*  |                                                                                                            |
+| `set`                   | *done*  |                                                                                                            |
+| `type`                  | *done*  | As a bonus, can also print line numbers                                                                    |
+| `ver`                   | *done*  |                                                                                                            |
 
-Major project worked on is interactive shell. The main task right now is the 
-internal readline code (history, editor etc).
+The unix side, small as in BusyBox (the bigger tools are programs of
+their own): `cat`, `clear`, `cp`, `mv`, `rm` (`-r`, `-f`) as names of the
+DOS commands; `basename`, `cal`, `cmp`, `cut`, `dirname`, `env`, `false`,
+`head`, `hexdump`, `ls`, `pwd`, `rev`, `seq`, `sleep`, `sort`, `tail`,
+`tee`, `touch`, `tr`, `true`, `uname`, `uniq`, `wc`, `which`, `yes`. They
+get their arguments as programs do (`env X=1` keeps its `=`).
 
 ## Command line editor status:
-| Key                    | status  | remark                                |
-|------------------------|---------|---------------------------------------|
-| Left/right/home/end    | *done*  |                                       |
- | Up/Down: history       | WIP     | fails randomly                        |
- | Backspace              | *done*  |                                       |
- | Del                    | not yet |                                       |
- | control+a : HOME       | *done*  |                                       |
- | control+b : word left  | not yet |                                       |
- | control+c : cancel     | WIP     | de facto - clear line, fails on Posix |
- | control+d : EOF        | *done*  |                                       |
- | control+e : END        | *done*  |                                       |
- | control+f : word right | not yet |                                       |
- | control+l : cls        | *done*  |                                       |
- | TAB                    | not yet |                                       |
- | insert/override        | done    | Cursor shape not supported on OXS     |
- | esc                    | ????    | Fix breaks on Linux/OSX ?             |          
- | insert                 | *done*  | Toggle insert/override mode           |
- | control+arrows         | not yet | move to next/prev word                |
+| Key                       | status  | remark                                                        |
+|---------------------------|---------|---------------------------------------------------------------|
+| Left/right/home/end       | *done*  |                                                               |
+| Up/Down: history          | *done*  | the line being typed comes back with Down                     |
+| Backspace, Del            | *done*  |                                                               |
+| control+a : HOME          | *done*  |                                                               |
+| control+b : word left     | *done*  |                                                               |
+| control+c : cancel        | *done*  | gives the line up; while a command runs it stays the signal  |
+| control+d : EOF           | *done*  |                                                               |
+| control+e : END           | *done*  |                                                               |
+| control+f : word right    | *done*  |                                                               |
+| control+k / control+u     | *done*  | delete to the end / to the start                              |
+| control+l : cls           | *done*  |                                                               |
+| control+arrows            | *done*  | word left/right (terminal sequences and DOS scan codes; not yet Windows) |
+| esc                       | *done*  | clears the line, as in DOS                                    |
+| TAB / shift+TAB           | *done*  | file names as cmd.exe completes them: the next / the one before; POSIX and GonWare only |
+| insert/override           | *done*  | Cursor shape not supported on OSX                             |
+
+## Tests
+`ctest` in the build directory runs the unit tests (`tests`), every
+command and the shell on the host (`tests/commands.sh`: pipes,
+redirections, batch files, error levels) and the line editor in a pseudo
+terminal (`tests/readline.py`). `-DFDBOX_FORMAT=OFF` configures without
+fetching Format.cmake (no network needed).
 
 ## Compiler support
  1. Linux: Clang/GCC - this is the main development environment. Supported.

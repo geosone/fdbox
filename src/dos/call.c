@@ -6,8 +6,9 @@
 #include "dos/batch.h"
 #include "dos/call.h"
 #include "dos/command.h"
-#include "lib/args.h"
 #include "fdbox.h"
+#include "lib/args.h"
+#include "lib/environ.h"
 #include "lib/nls.h"
 
 /*
@@ -25,7 +26,7 @@ int command_call(int argc, char *argv[]) {
         if (!command_merge_args(argc - 1, (const char **)(argv + 1), line, sizeof(line)))
                 return EXIT_FAILURE;
         command_execute_line(line);
-        return errno;
+        return command_errorlevel;
 }
 
 const char *help_call() { return _("Here should be a basic help for call"); }
