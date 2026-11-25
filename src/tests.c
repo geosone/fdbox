@@ -16,6 +16,8 @@ bool test(const char *message, function_test unittest);
 bool test_str_list();
 bool test_args();
 bool test_args_split();
+bool test_args_words();
+bool test_unix_flags();
 bool test_applets();
 bool test_strings();
 bool test_prompts();
@@ -30,6 +32,8 @@ int main(int argc, char *argv[]) {
         ok &= test("prompts", test_prompts);
         ok &= test("variables expansion", test_var_expand);
         ok &= test("argument split", test_args_split);
+        ok &= test("argument words", test_args_words);
+        ok &= test("unix switches", test_unix_flags);
         ok &= test_str_list();
         UNUSED(argc);
         UNUSED(argv);
@@ -647,5 +651,57 @@ bool test_prompts() {
                  FDBOX_VERSION_STR);
         ok &= verify_string_equals(prompt, FDBOX_VERSION_STR, message);
 
+        return ok;
+}
+
+/* the words of a line as a program gets them: "=" stays in the word */
+bool test_args_words() {
+        bool ok = true;
+        struct command_args args;
+
+        command_args_split_words("env X1=ja cmd", &args);
+        ok &= verify_int_equals(3, (int)args.argc, "three words");
+        ok &= args.argc == 3 && verify_string_equals(args.argv[1], "X1=ja", "= stays in a word");
+        command_args_free(&args);
+
+        command_args_split_words("cut -d = -f 2", &args);
+        ok &= verify_int_equals(5, (int)args.argc, "a lone = is a word");
+        ok &= args.argc == 5 && verify_string_equals(args.argv[2], "=", "the lone =");
+        command_args_free(&args);
+
+        command_args_split_words("type \"beta file.txt\"  x", &args);
+        ok &= verify_int_equals(3, (int)args.argc, "quotes group words");
+        ok &=
+            args.argc == 3 && verify_string_equals(args.argv[1], "beta file.txt", "quotes removed");
+        command_args_free(&args);
+        return ok;
+}
+
+/* command_unix_flags takes "-x" switches of the allowed letters out */
+bool test_unix_flags() {
+        bool ok = true;
+        char a0[] = "rm", a1[] = "-rf", a2[] = "dir", a3[] = "-x", a4[] = "-r", a5[] = "file";
+        char *argv[] = {a0, a1, a2, a3, a4, a5, NULL};
+        int argc = 6, taken;
+        char found[4];
+
+        taken = command_unix_flags(&argc, argv, "rf", found, sizeof(found));
+        ok &= verify_int_equals(2, taken, "two switch arguments taken");
+        ok &= verify_string_equals(found, "rf", "each letter once");
+        ok &= verify_int_equals(4, argc, "the rest left");
+        ok &= verify_string_equals(argv[1], "dir", "a name stays");
+        ok &= verify_string_equals(argv[2], "-x", "a switch not allowed stays");
+        ok &= verify_string_equals(argv[3], "file", "the order kept");
+        ok &= verify_ptr_equals(argv[4], NULL, "argv ends with NULL");
+
+        {
+                char b0[] = "md", b1[] = "-", b2[] = "x";
+                char *argv2[] = {b0, b1, b2, NULL};
+                argc = 3;
+                taken = command_unix_flags(&argc, argv2, "p", found, sizeof(found));
+                ok &= verify_int_equals(0, taken, "a lone - is no switch");
+                ok &= verify_int_equals(3, argc, "nothing taken");
+                ok &= verify_string_equals(found, "", "no letters");
+        }
         return ok;
 }
