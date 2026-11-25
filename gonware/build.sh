@@ -47,6 +47,7 @@ sh "$cc" "$arch" "$sysroot" "$output" \
 	src/dos/if.c \
 	src/dos/load.c \
 	src/dos/md.c \
+	src/dos/rd.c \
 	src/dos/path.c \
 	src/dos/prompt.c \
 	src/dos/reboot.c \

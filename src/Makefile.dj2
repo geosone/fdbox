@@ -18,6 +18,7 @@ OBJECTS=applets.o main.o help.o \
 	dos/goto.o \
 	dos/if.o \
 	dos/md.o \
+	dos/rd.o \
 	dos/rem.o \
 	dos/path.o \
 	dos/prompt.o \
@@ -85,6 +86,8 @@ dos/goto.o: dos/goto.c
 dos/if.o: dos/if.c
 
 dos/md.o: dos/md.c
+
+dos/rd.o: dos/rd.c
 
 dos/path.o: dos/path.c
 

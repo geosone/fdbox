@@ -29,6 +29,7 @@
 #include "dos/md.h"
 #include "dos/path.h"
 #include "dos/prompt.h"
+#include "dos/rd.h"
 #include "dos/reboot.h"
 #include "dos/rem.h"
 #include "dos/set.h"
@@ -53,6 +54,7 @@ struct applet commands[] = {
         {help_call, command_call, "call"},
         {help_cd, command_cd, "cd"},
         {help_chcp, command_chcp, "chcp"},
+        {help_cd, command_cd, "chdir"},
         {help_cls, command_cls, "cls"},
         {help_copy, command_copy, "copy"},
         {help_command, command_command, "command"},
@@ -60,6 +62,7 @@ struct applet commands[] = {
         {help_del, command_del, "del"},
         {help_dir, command_dir, "dir"},
         {help_echo, command_echo, "echo"},
+        {help_del, command_del, "erase"},
         {help_exit, command_exit, "exit"},
         {help_for, command_for, "for"},
         {help_goto, command_goto, "goto"},
@@ -67,13 +70,17 @@ struct applet commands[] = {
         {help_if, command_if, "if"},
         {help_keyb, command_keyb, "keyb"},
         {help_load, command_load, "load"},
+        {help_md, command_md, "md"},
         {help_md, command_md, "mkdir"},
         {help_move, command_move, "move"},
         {help_path, command_path, "path"},
         {help_poweroff, command_poweroff, "poweroff"},
         {help_prompt, command_prompt, "prompt"},
+        {help_rd, command_rd, "rd"},
         {help_reboot, command_reboot, "reboot"},
         {help_rem, command_rem, "rem"},
+        {help_del, command_del, "rm"},
+        {help_rd, command_rd, "rmdir"},
         {help_set, command_set, "set"},
         {help_shift, command_shift, "shift"},
         {help_time, command_time, "time"},

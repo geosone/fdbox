@@ -7,8 +7,8 @@
 #include "dos/md.h"
 #include "fdbox.h"
 #include "lib/args.h"
-#include "lib/strextra.h"
 #include "lib/nls.h"
+#include "lib/strextra.h"
 
 /*
 This file is part of fdbox
@@ -164,12 +164,10 @@ static bool mkdir_create_dir(char *dir_name, const struct mkdir_config *config) 
 #endif
         }
 
-        if (config->global.verbose) {
-                if (r == 0) {
-                        printf(_("Created %s\n"), dir_name);
-                } else {
-                        printf(_("Failed creating %s\n"), dir_name);
-                }
+        if (r != 0) {
+                printf(_("Failed creating %s\n"), dir_name);
+        } else if (config->global.verbose) {
+                printf(_("Created %s\n"), dir_name);
         }
         return r == 0;
 }

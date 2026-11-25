@@ -58,6 +58,7 @@ add_executable(
   src/dos/batch.c
   src/dos/load.c
   src/dos/md.c
+  src/dos/rd.c
   src/dos/path.c
   src/dos/prompt.c
   src/dos/chcp.c
