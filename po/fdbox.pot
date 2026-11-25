@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fdbox\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-25 18:25+0100\n"
+"POT-Creation-Date: 2026-11-25 19:10+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -128,69 +128,69 @@ msgstr ""
 msgid "Clear screen"
 msgstr ""
 
-#: src/dos/command.c:213
+#: src/dos/command.c:217
 #, c-format
 msgid "%s is a driver: LOAD %s, if you mean it\n"
 msgstr ""
 
-#: src/dos/command.c:217
+#: src/dos/command.c:221
 #, c-format
 msgid "%s: cannot start (error %ld)\n"
 msgstr ""
 
-#: src/dos/command.c:238
+#: src/dos/command.c:242
 msgid "an error occurred in execvp\n"
 msgstr ""
 
-#: src/dos/command.c:271
+#: src/dos/command.c:275
 msgid "Command line parsing failed\n"
 msgstr ""
 
-#: src/dos/command.c:305
+#: src/dos/command.c:309
 msgid "Invalid drive specification\n"
 msgstr ""
 
-#: src/dos/command.c:324
+#: src/dos/command.c:328
 #, c-format
 msgid "Command failed (%d)\n"
 msgstr ""
 
-#: src/dos/command.c:334
+#: src/dos/command.c:338
 #, c-format
 msgid "Bad command or file name - %s\n"
 msgstr ""
 
-#: src/dos/command.c:343
+#: src/dos/command.c:347
 #, c-format
 msgid "Command not found - %d \n"
 msgstr ""
 
-#: src/dos/command.c:414
+#: src/dos/command.c:418
 #, c-format
 msgid "%s: cannot open\n"
 msgstr ""
 
-#: src/dos/command.c:441
+#: src/dos/command.c:445
 msgid "Syntax error: a redirection without a file name\n"
 msgstr ""
 
-#: src/dos/command.c:493
+#: src/dos/command.c:497
 msgid "Too many pipes\n"
 msgstr ""
 
-#: src/dos/command.c:567
+#: src/dos/command.c:571
 msgid "Runs an MS-DOS interactive shell"
 msgstr ""
 
-#: src/dos/command.c:598
+#: src/dos/command.c:602
 msgid "   command {shell command} /l\n"
 msgstr ""
 
-#: src/dos/command.c:599
+#: src/dos/command.c:603
 msgid "   Runs an interactive shell \n"
 msgstr ""
 
-#: src/dos/command.c:600
+#: src/dos/command.c:604
 msgid "   TODO: properly implement the command.com switches \n"
 msgstr ""
 
@@ -365,52 +365,71 @@ msgstr ""
 msgid "prompt you for a new time\n"
 msgstr ""
 
-#: src/dos/del.c:67 src/dos/dir.c:136 src/dos/md.c:56 src/dos/rd.c:44
+#: src/dos/del.c:87 src/dos/dir.c:136 src/dos/md.c:59 src/dos/rd.c:44
 msgid "Failed parsing command line args\n"
-msgstr ""
-
-#: src/dos/del.c:98
-#, c-format
-msgid "Deleted %d files\n"
-msgstr ""
-
-#: src/dos/del.c:100
-#, c-format
-msgid "Deleted %d/%d files\n"
 msgstr ""
 
 #: src/dos/del.c:106
 #, c-format
+msgid "Could not find %s\n"
+msgstr ""
+
+#: src/dos/del.c:125
+#, c-format
+msgid "Deleted %d files\n"
+msgstr ""
+
+#: src/dos/del.c:127
+#, c-format
+msgid "Deleted %d/%d files\n"
+msgstr ""
+
+#: src/dos/del.c:133
+#, c-format
 msgid "Deleted %d directories\n"
 msgstr ""
 
-#: src/dos/del.c:108
+#: src/dos/del.c:135
 #, c-format
 msgid "Deleted %d/%d directories\n"
 msgstr ""
 
-#: src/dos/del.c:116
+#: src/dos/del.c:143
 msgid "Delete one or more files"
 msgstr ""
 
-#: src/dos/del.c:161
+#: src/dos/del.c:190
 msgid "   del [files] /p /v /r /f\n"
 msgstr ""
 
-#: src/dos/del.c:162
+#: src/dos/del.c:191
 msgid "   /p Prompt for deletion of each file\n"
 msgstr ""
 
-#: src/dos/del.c:163
+#: src/dos/del.c:192
 msgid "   /v Verbose delete\n"
 msgstr ""
 
-#: src/dos/del.c:164
+#: src/dos/del.c:193
 msgid "   /r Recursive delete (delete subdirs)\n"
 msgstr ""
 
-#: src/dos/del.c:165
+#: src/dos/del.c:194
+msgid "   rm -r, rm -f: as /r and /f; rm refuses a directory without -r\n"
+msgstr ""
+
+#: src/dos/del.c:195
 msgid "   /f Force deletion of subdirs, or RO files\n"
+msgstr ""
+
+#: src/dos/del.c:250
+#, c-format
+msgid "rm: %s is a directory (-r removes it)\n"
+msgstr ""
+
+#: src/dos/del.c:291
+#, c-format
+msgid "Could not remove %s\n"
 msgstr ""
 
 #: src/dos/dir.c:147
@@ -594,24 +613,24 @@ msgstr ""
 msgid "Loads a kernel module (GLM)"
 msgstr ""
 
-#: src/dos/md.c:78
+#: src/dos/md.c:84
 msgid "Create one or more directories"
 msgstr ""
 
-#: src/dos/md.c:114
+#: src/dos/md.c:120
 msgid "   md [files] /r\n"
 msgstr ""
 
-#: src/dos/md.c:115
+#: src/dos/md.c:121
 msgid "   /r Recursive creation (otherwise, creates only top level)\n"
 msgstr ""
 
-#: src/dos/md.c:168
+#: src/dos/md.c:174
 #, c-format
 msgid "Failed creating %s\n"
 msgstr ""
 
-#: src/dos/md.c:170
+#: src/dos/md.c:176
 #, c-format
 msgid "Created %s\n"
 msgstr ""
@@ -804,6 +823,42 @@ msgstr ""
 msgid "Print a month calendar (cal [month [year]])"
 msgstr ""
 
+#: src/unix/cmp.c:35
+msgid "   cmp [-s] [-l] FILE1 [FILE2]\n"
+msgstr ""
+
+#: src/unix/cmp.c:45
+#, c-format
+msgid "cmp: cannot open %s\n"
+msgstr ""
+
+#: src/unix/cmp.c:58
+#, c-format
+msgid "cmp: EOF on %s after byte %ld\n"
+msgstr ""
+
+#: src/unix/cmp.c:71
+#, c-format
+msgid "%s %s differ: byte %ld, line %ld\n"
+msgstr ""
+
+#: src/unix/cmp.c:90
+msgid "Compare two files byte by byte"
+msgstr ""
+
+#: src/unix/cut.c:181
+#, c-format
+msgid "cut: cannot open %s\n"
+msgstr ""
+
+#: src/unix/cut.c:190
+msgid "   cut -b LIST | -c LIST | -f LIST [-d DELIMITER] [-s] [file...]\n"
+msgstr ""
+
+#: src/unix/cut.c:194
+msgid "Print parts of each line (bytes, characters, fields)"
+msgstr ""
+
 #: src/unix/dirname.c:24
 #, c-format
 msgid "dirname: a path is needed\n"
@@ -811,6 +866,44 @@ msgstr ""
 
 #: src/unix/dirname.c:56
 msgid "Strip the last component from a path"
+msgstr ""
+
+#: src/unix/env.c:77
+msgid "env: the command is too long\n"
+msgstr ""
+
+#: src/unix/env.c:109
+msgid "Show the environment, or run a command with changes to it"
+msgstr ""
+
+#: src/unix/env.c:138
+msgid "   which NAME...\n"
+msgstr ""
+
+#: src/unix/env.c:144
+#, c-format
+msgid "%s: shell built-in command\n"
+msgstr ""
+
+#: src/unix/env.c:155
+#, c-format
+msgid "which: no %s in PATH\n"
+msgstr ""
+
+#: src/unix/env.c:161
+msgid "Show what a command name runs"
+msgstr ""
+
+#: src/unix/env.c:185
+msgid "uname: cannot get the system's name\n"
+msgstr ""
+
+#: src/unix/env.c:222
+msgid "   uname [-a] [-s] [-n] [-r] [-m]\n"
+msgstr ""
+
+#: src/unix/env.c:226
+msgid "Show the system's name, release and machine"
 msgstr ""
 
 #: src/unix/head.c:64
@@ -831,8 +924,101 @@ msgstr ""
 msgid "Dump the contents of a file as hex and ASCII"
 msgstr ""
 
+#: src/unix/ls.c:125
+#, c-format
+msgid "ls: cannot open %s\n"
+msgstr ""
+
+#: src/unix/ls.c:147
+#, c-format
+msgid "ls: %lu more entries not shown\n"
+msgstr ""
+
+#: src/unix/ls.c:170
+#, c-format
+msgid "ls: unknown option -%c\n"
+msgstr ""
+
+#: src/unix/ls.c:171
+msgid "   ls [-l] [-a] [-1] [file or directory...]\n"
+msgstr ""
+
+#: src/unix/ls.c:179
+#, c-format
+msgid "ls: %s: not found\n"
+msgstr ""
+
+#: src/unix/ls.c:207
+msgid "List directory contents (-l long, -a all, -1 one a line)"
+msgstr ""
+
 #: src/unix/pwd.c:50
 msgid "Print the current working directory"
+msgstr ""
+
+#: src/unix/simple.c:25
+msgid "Do nothing, successfully"
+msgstr ""
+
+#: src/unix/simple.c:33
+msgid "Do nothing, unsuccessfully"
+msgstr ""
+
+#: src/unix/simple.c:61
+msgid "Print a text (default y) again and again"
+msgstr ""
+
+#: src/unix/simple.c:70
+msgid "   sleep NUMBER[s|m|h]...\n"
+msgstr ""
+
+#: src/unix/simple.c:77 src/unix/simple.c:85
+#, c-format
+msgid "sleep: invalid time %s\n"
+msgstr ""
+
+#: src/unix/simple.c:97
+msgid "Wait a number of seconds (or m, h)"
+msgstr ""
+
+#: src/unix/simple.c:117
+#, c-format
+msgid "seq: not a whole number: %s\n"
+msgstr ""
+
+#: src/unix/simple.c:123
+msgid "   seq [-s SEPARATOR] [FIRST [STEP]] LAST\n"
+msgstr ""
+
+#: src/unix/simple.c:134
+msgid "seq: the step must not be 0\n"
+msgstr ""
+
+#: src/unix/simple.c:146
+msgid "Print a sequence of numbers"
+msgstr ""
+
+#: src/unix/simple.c:210
+#, c-format
+msgid "rev: cannot open %s\n"
+msgstr ""
+
+#: src/unix/simple.c:220
+msgid "Print every line backwards"
+msgstr ""
+
+#: src/unix/simple.c:242
+#, c-format
+msgid "tee: too many files, %s left out\n"
+msgstr ""
+
+#: src/unix/simple.c:248
+#, c-format
+msgid "tee: cannot open %s\n"
+msgstr ""
+
+#: src/unix/simple.c:270
+msgid "Copy the input to the output and into files (-a appends)"
 msgstr ""
 
 #: src/unix/sort.c:79
@@ -865,6 +1051,18 @@ msgstr ""
 
 #: src/unix/touch.c:60
 msgid "Create a file or update its time to now"
+msgstr ""
+
+#: src/unix/tr.c:145
+msgid "tr: invalid set\n"
+msgstr ""
+
+#: src/unix/tr.c:184
+msgid "   tr [-d] [-s] SET1 [SET2]\n"
+msgstr ""
+
+#: src/unix/tr.c:188
+msgid "Translate, delete or squeeze characters"
 msgstr ""
 
 #: src/unix/uniq.c:59

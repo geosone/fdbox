@@ -15,6 +15,10 @@ This file is part of fdbox
 For license - read license.txt
 */
 
+#ifdef __MSDOS__
+#include <dir.h>
+#endif
+
 #if defined(__TURBOC__) || defined(__WATCOMC__)
 #include "lib/tc202/dos-glob.h"
 #include "lib/tc202/stdextra.h"
@@ -37,6 +41,8 @@ struct del_config {
         bool prompt;
         bool recursive;
         bool force;
+        /* used by its unix name (rm): a directory needs -r */
+        bool unix_name;
         struct command_config global;
 };
 
@@ -52,7 +58,7 @@ static void del_print_extended_help();
 static deletion_result del_single_file(struct del_config *config, const char *file_name);
 static deletion_result del_dir(struct del_config *config, const char *file_name,
                                int *deleted_file_count, int *found_file_count,
-                               int *deleted_dirs_count, int *found_dirs_count);
+                               int *deleted_dirs_count, int *found_dirs_count, int depth);
 
 int command_del(int argc, char *argv[]) {
         size_t i;
@@ -61,8 +67,22 @@ int command_del(int argc, char *argv[]) {
         int total_deleted_dirs = 0;
         int total_dirs = 0;
         struct del_config config;
+        char unix_flags[4];
+        bool failed = false;
 
         del_config_init(&config);
+        if (argc > 0 && tolower((unsigned char)argv[0][0]) == 'r' &&
+            tolower((unsigned char)argv[0][1]) == 'm' && argv[0][2] == '\0') {
+                config.unix_name = true;
+        }
+        /* rm -r, rm -f, rm -rf: as /r and /f */
+        command_unix_flags(&argc, argv, "rf", unix_flags, sizeof(unix_flags));
+        if (strchr(unix_flags, 'r')) {
+                config.recursive = true;
+        }
+        if (strchr(unix_flags, 'f')) {
+                config.force = true;
+        }
         if (!del_config_parse(argc, argv, &config)) {
                 fputs(_("Failed parsing command line args\n"), stdout);
                 return EXIT_FAILURE;
@@ -81,7 +101,14 @@ int command_del(int argc, char *argv[]) {
                 int deleted_dirs = 0;
 
                 result = del_dir(&config, config.global.files.file[i], &deleted_files,
-                                 &tested_files, &deleted_dirs, &tested_dirs);
+                                 &tested_files, &deleted_dirs, &tested_dirs, 0);
+                if (tested_files + tested_dirs == 0 && result != no && !config.force) {
+                        fprintf(stderr, _("Could not find %s\n"), config.global.files.file[i]);
+                }
+                if (result != yes || deleted_files != tested_files || deleted_dirs != tested_dirs ||
+                    (tested_files + tested_dirs == 0 && !config.force)) {
+                        failed = true;
+                }
                 total_deleted_dirs += deleted_dirs;
                 total_deleted_files += deleted_files;
                 total_dirs += tested_dirs;
@@ -110,7 +137,7 @@ int command_del(int argc, char *argv[]) {
                         }
                 }
         }
-        return EXIT_FAILURE;
+        return failed ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
 const char *help_del() { return _("Delete one or more files"); }
@@ -118,6 +145,8 @@ const char *help_del() { return _("Delete one or more files"); }
 static void del_config_init(struct del_config *config) {
         config->prompt = false;
         config->recursive = false;
+        config->force = false;
+        config->unix_name = false;
         command_config_init(&config->global);
 }
 
@@ -162,6 +191,7 @@ static void del_print_extended_help() {
         fputs(_("   /p Prompt for deletion of each file\n"), stdout);
         fputs(_("   /v Verbose delete\n"), stdout);
         fputs(_("   /r Recursive delete (delete subdirs)\n"), stdout);
+        fputs(_("   rm -r, rm -f: as /r and /f; rm refuses a directory without -r\n"), stdout);
         fputs(_("   /f Force deletion of subdirs, or RO files\n"), stdout);
 }
 
@@ -199,9 +229,12 @@ static deletion_result del_single_file(struct del_config *config, const char *fi
         return r == 0 ? yes : no;
 }
 
+/* a file name or pattern; a directory: its files, and with /r (rm -r) its
+ * subdirectories and itself too; without, rm refuses a directory and DEL
+ * deletes only the files in it, as DOS does */
 static deletion_result del_dir(struct del_config *config, const char *file_name,
                                int *deleted_file_count, int *found_file_count,
-                               int *deleted_dirs_count, int *found_dirs_count) {
+                               int *deleted_dirs_count, int *found_dirs_count, int depth) {
         glob_t globbuf = {0};
         deletion_result result = yes;
         bool delete_dir_on_exit = false;
@@ -213,19 +246,30 @@ static deletion_result del_dir(struct del_config *config, const char *file_name,
         strcat(fname, file_name);
         /* only a path that is there can be a directory (st is not filled otherwise) */
         if (stat(file_name, &st) == 0 && S_ISDIR(st.st_mode)) {
+                if (!config->recursive && config->unix_name) {
+                        fprintf(stderr, _("rm: %s is a directory (-r removes it)\n"), file_name);
+                        return no;
+                }
                 if (!str_ends_with(file_name, '/') && !str_ends_with(file_name, '\\')) {
                         strcat(fname, DIRECTORY_DELIMITER);
                 }
                 strcat(fname, ALL_FILES_GLOB);
-                delete_dir_on_exit = true;
-                (*found_dirs_count)++;
+                if (config->recursive) {
+                        delete_dir_on_exit = true;
+                        (*found_dirs_count)++;
+                }
         }
         glob(fname, GLOB_DOOFFS, NULL, &globbuf);
         for (j = 0; j != globbuf.gl_pathc; j++) {
                 const char *name = globbuf.gl_pathv[j];
                 if (stat(name, &st) == 0 && S_ISDIR(st.st_mode)) {
+                        const char *base = file_base_name(name);
+                        if (!config->recursive || strcmp(base, ".") == 0 ||
+                            strcmp(base, "..") == 0) {
+                                continue;
+                        }
                         result = del_dir(config, name, deleted_file_count, found_file_count,
-                                         deleted_dirs_count, found_dirs_count);
+                                         deleted_dirs_count, found_dirs_count, depth + 1);
                 } else {
                         (*found_file_count)++;
                         result = del_single_file(config, globbuf.gl_pathv[j]);
@@ -241,8 +285,11 @@ static deletion_result del_dir(struct del_config *config, const char *file_name,
         globfree(&globbuf);
         if (result == yes && delete_dir_on_exit) {
                 /* this is actualy a directory */
-                remove(file_name);
-                (*deleted_dirs_count)++;
+                if (rmdir(file_name) == 0) {
+                        (*deleted_dirs_count)++;
+                } else {
+                        fprintf(stderr, _("Could not remove %s\n"), file_name);
+                }
                 if (config->global.verbose) {
                         printf(" <d> %s\n", file_name);
                 }

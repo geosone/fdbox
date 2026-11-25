@@ -90,6 +90,36 @@ void command_config_init(struct command_config *config) {
         config->state.current_argument = 1;
 }
 
+int command_unix_flags(int *argc, char *argv[], const char *allowed, char *found, size_t size) {
+        int i, j = 1, taken = 0;
+        size_t n = 0;
+
+        for (i = 1; i < *argc; i++) {
+                const char *a = argv[i];
+                bool flags = a[0] == '-' && a[1] != '\0';
+                const char *p;
+                for (p = a + 1; flags && *p; p++) {
+                        flags = strchr(allowed, *p) != NULL;
+                }
+                if (!flags) {
+                        argv[j++] = argv[i];
+                        continue;
+                }
+                for (p = a + 1; *p; p++) {
+                        if (n + 1 < size && !memchr(found, *p, n)) {
+                                found[n++] = *p;
+                        }
+                }
+                taken++;
+        }
+        if (size) {
+                found[n] = 0;
+        }
+        *argc = j;
+        argv[j] = NULL;
+        return taken;
+}
+
 int command_config_parse(int argc, char *argv[], struct command_config *config) {
         char c;
         char *arg;

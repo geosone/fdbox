@@ -50,11 +50,17 @@ static bool mkdir_create_dir(char *dir_name, const struct mkdir_config *config);
 int command_md(int argc, char *argv[]) {
         size_t i;
         struct mkdir_config config;
+        char unix_flags[4];
 
         mkdir_config_init(&config);
+        /* mkdir -p: the parents too, as /r */
+        command_unix_flags(&argc, argv, "p", unix_flags, sizeof(unix_flags));
         if (!mkdir_config_parse(argc, argv, &config)) {
                 fputs(_("Failed parsing command line args\n"), stdout);
                 return EXIT_FAILURE;
+        }
+        if (strchr(unix_flags, 'p')) {
+                config.recursive = true;
         }
         /* mkdir_config_print(&config); */
 

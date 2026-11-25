@@ -65,13 +65,19 @@ sh "$cc" "$arch" "$sysroot" "$output" \
 	src/main.c \
 	src/unix/basename.c \
 	src/unix/cal.c \
+	src/unix/cmp.c \
+	src/unix/cut.c \
 	src/unix/dirname.c \
+	src/unix/env.c \
 	src/unix/head.c \
 	src/unix/hexdump.c \
+	src/unix/ls.c \
 	src/unix/pwd.c \
+	src/unix/simple.c \
 	src/unix/sort.c \
 	src/unix/tail.c \
 	src/unix/touch.c \
+	src/unix/tr.c \
 	src/unix/uniq.c \
 	src/unix/wc.c \
 	src/lib/gonware/glob.c \

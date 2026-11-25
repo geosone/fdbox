@@ -18,6 +18,10 @@ struct applet {
         function_help help_text;
         function_handler handler;
         const char *name;
+        /* a unix command: its arguments split as a program gets them (at
+         * white space only, "NAME=VALUE" stays one word), not as DOS splits
+         * a command's at "=" too */
+        bool words;
 };
 
 struct applet *find_applet(bool sensitive, const char *applet_name, struct applet commands[]);

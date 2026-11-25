@@ -46,6 +46,10 @@ struct command_config {
 };
 
 void command_config_init(struct command_config *config);
+/* unix switches ("-p", "-rf") of a DOS command used by its unix name: each
+ * argument of "-" and letters all in allowed is taken out of argv, its
+ * letters added to found (size bytes with the NUL); the number taken out */
+int command_unix_flags(int *argc, char *argv[], const char *allowed, char *found, size_t size);
 int command_config_parse(int argc, char *argv[], struct command_config *config);
 const char *command_config_next(int argc, char *argv[], struct command_config *config);
 void command_config_print(const struct command_config *config);

@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fdbox\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-25 18:25+0100\n"
+"POT-Creation-Date: 2026-11-25 19:10+0100\n"
 "PO-Revision-Date: 2026-11-07 18:00+0100\n"
 "Last-Translator: Mario Fetka <mario.fetka@gmail.com>\n"
 "Language-Team: German\n"
@@ -131,69 +131,69 @@ msgstr "Zeigt oder ändert die Codepage"
 msgid "Clear screen"
 msgstr "Löscht den Bildschirm"
 
-#: src/dos/command.c:213
+#: src/dos/command.c:217
 #, c-format
 msgid "%s is a driver: LOAD %s, if you mean it\n"
 msgstr "%s ist ein Treiber: LOAD %s, wenn das gemeint ist\n"
 
-#: src/dos/command.c:217
+#: src/dos/command.c:221
 #, c-format
 msgid "%s: cannot start (error %ld)\n"
 msgstr "%s: kann nicht starten (Fehler %ld)\n"
 
-#: src/dos/command.c:238
+#: src/dos/command.c:242
 msgid "an error occurred in execvp\n"
 msgstr "Fehler in execvp\n"
 
-#: src/dos/command.c:271
+#: src/dos/command.c:275
 msgid "Command line parsing failed\n"
 msgstr "Die Befehlszeile ist fehlerhaft\n"
 
-#: src/dos/command.c:305
+#: src/dos/command.c:309
 msgid "Invalid drive specification\n"
 msgstr "Ungültige Laufwerksangabe\n"
 
-#: src/dos/command.c:324
+#: src/dos/command.c:328
 #, c-format
 msgid "Command failed (%d)\n"
 msgstr "Befehl fehlgeschlagen (%d)\n"
 
-#: src/dos/command.c:334
+#: src/dos/command.c:338
 #, c-format
 msgid "Bad command or file name - %s\n"
 msgstr "Befehl oder Dateiname nicht gefunden - %s\n"
 
-#: src/dos/command.c:343
+#: src/dos/command.c:347
 #, c-format
 msgid "Command not found - %d \n"
 msgstr "Befehl nicht gefunden - %d \n"
 
-#: src/dos/command.c:414
+#: src/dos/command.c:418
 #, c-format
 msgid "%s: cannot open\n"
 msgstr "%s: kann nicht geöffnet werden\n"
 
-#: src/dos/command.c:441
+#: src/dos/command.c:445
 msgid "Syntax error: a redirection without a file name\n"
 msgstr "Syntaxfehler: Umleitung ohne Dateiname\n"
 
-#: src/dos/command.c:493
+#: src/dos/command.c:497
 msgid "Too many pipes\n"
 msgstr "Zu viele Pipes\n"
 
-#: src/dos/command.c:567
+#: src/dos/command.c:571
 msgid "Runs an MS-DOS interactive shell"
 msgstr "Startet eine interaktive MS-DOS-Shell"
 
-#: src/dos/command.c:598
+#: src/dos/command.c:602
 msgid "   command {shell command} /l\n"
 msgstr "   command {Shell-Befehl} /l\n"
 
-#: src/dos/command.c:599
+#: src/dos/command.c:603
 msgid "   Runs an interactive shell \n"
 msgstr "   Startet eine interaktive Shell \n"
 
-#: src/dos/command.c:600
+#: src/dos/command.c:604
 msgid "   TODO: properly implement the command.com switches \n"
 msgstr "   TODO: die Schalter von COMMAND.COM richtig umsetzen \n"
 
@@ -372,53 +372,72 @@ msgstr "Mit einer Uhrzeit setzt der Befehl sie nur,\n"
 msgid "prompt you for a new time\n"
 msgstr "nach einer neuen Uhrzeit\n"
 
-#: src/dos/del.c:67 src/dos/dir.c:136 src/dos/md.c:56 src/dos/rd.c:44
+#: src/dos/del.c:87 src/dos/dir.c:136 src/dos/md.c:59 src/dos/rd.c:44
 msgid "Failed parsing command line args\n"
 msgstr "Die Parameter sind fehlerhaft\n"
 
-#: src/dos/del.c:98
+#: src/dos/del.c:106
+#, c-format
+msgid "Could not find %s\n"
+msgstr "%s nicht gefunden\n"
+
+#: src/dos/del.c:125
 #, c-format
 msgid "Deleted %d files\n"
 msgstr "%d Dateien gelöscht\n"
 
-#: src/dos/del.c:100
+#: src/dos/del.c:127
 #, c-format
 msgid "Deleted %d/%d files\n"
 msgstr "%d/%d Dateien gelöscht\n"
 
-#: src/dos/del.c:106
+#: src/dos/del.c:133
 #, c-format
 msgid "Deleted %d directories\n"
 msgstr "%d Verzeichnisse gelöscht\n"
 
-#: src/dos/del.c:108
+#: src/dos/del.c:135
 #, c-format
 msgid "Deleted %d/%d directories\n"
 msgstr "%d/%d Verzeichnisse gelöscht\n"
 
-#: src/dos/del.c:116
+#: src/dos/del.c:143
 msgid "Delete one or more files"
 msgstr "Löscht eine oder mehrere Dateien"
 
-#: src/dos/del.c:161
+#: src/dos/del.c:190
 msgid "   del [files] /p /v /r /f\n"
 msgstr "   del [Dateien] /p /v /r /f\n"
 
-#: src/dos/del.c:162
+#: src/dos/del.c:191
 msgid "   /p Prompt for deletion of each file\n"
 msgstr "   /p Vor jeder Datei fragen\n"
 
-#: src/dos/del.c:163
+#: src/dos/del.c:192
 msgid "   /v Verbose delete\n"
 msgstr "   /v Ausführlich löschen\n"
 
-#: src/dos/del.c:164
+#: src/dos/del.c:193
 msgid "   /r Recursive delete (delete subdirs)\n"
 msgstr "   /r Rekursiv löschen (mit Unterverzeichnissen)\n"
 
-#: src/dos/del.c:165
+#: src/dos/del.c:194
+msgid "   rm -r, rm -f: as /r and /f; rm refuses a directory without -r\n"
+msgstr "   rm -r, rm -f: wie /r und /f; rm verweigert ein Verzeichnis ohne -r\n"
+
+#: src/dos/del.c:195
 msgid "   /f Force deletion of subdirs, or RO files\n"
 msgstr "   /f Auch Unterverzeichnisse und schreibgeschützte Dateien löschen\n"
+
+#: src/dos/del.c:250
+#, c-format
+msgid "rm: %s is a directory (-r removes it)\n"
+msgstr "rm: %s ist ein Verzeichnis (-r entfernt es)\n"
+
+#: src/dos/del.c:291
+#, c-format
+msgid "Could not remove %s\n"
+msgstr "%s konnte nicht entfernt werden\n"
 
 #: src/dos/dir.c:147
 #, c-format
@@ -603,24 +622,24 @@ msgstr "LOAD: Module gibt es nur unter GonWare\n"
 msgid "Loads a kernel module (GLM)"
 msgstr "Lädt ein Kernelmodul (GLM)"
 
-#: src/dos/md.c:78
+#: src/dos/md.c:84
 msgid "Create one or more directories"
 msgstr "Legt ein oder mehrere Verzeichnisse an"
 
-#: src/dos/md.c:114
+#: src/dos/md.c:120
 msgid "   md [files] /r\n"
 msgstr "   md [Verzeichnisse] /r\n"
 
-#: src/dos/md.c:115
+#: src/dos/md.c:121
 msgid "   /r Recursive creation (otherwise, creates only top level)\n"
 msgstr "   /r Rekursiv anlegen (sonst nur die oberste Ebene)\n"
 
-#: src/dos/md.c:168
+#: src/dos/md.c:174
 #, c-format
 msgid "Failed creating %s\n"
 msgstr "%s kann nicht angelegt werden\n"
 
-#: src/dos/md.c:170
+#: src/dos/md.c:176
 #, c-format
 msgid "Created %s\n"
 msgstr "%s angelegt\n"
@@ -648,7 +667,9 @@ msgstr "Erforderlicher Parameter fehlt\n"
 #: src/dos/rd.c:59
 #, c-format
 msgid "%s cannot be removed (not empty, in use or not found)\n"
-msgstr "%s kann nicht entfernt werden (nicht leer, in Benutzung oder nicht gefunden)\n"
+msgstr ""
+"%s kann nicht entfernt werden (nicht leer, in Benutzung oder nicht "
+"gefunden)\n"
 
 #: src/dos/rd.c:62
 #, c-format
@@ -815,6 +836,42 @@ msgstr "So Mo Di Mi Do Fr Sa\n"
 msgid "Print a month calendar (cal [month [year]])"
 msgstr "Gibt einen Monatskalender aus (cal [Monat [Jahr]])"
 
+#: src/unix/cmp.c:35
+msgid "   cmp [-s] [-l] FILE1 [FILE2]\n"
+msgstr "   cmp [-s] [-l] DATEI1 [DATEI2]\n"
+
+#: src/unix/cmp.c:45
+#, c-format
+msgid "cmp: cannot open %s\n"
+msgstr "cmp: %s kann nicht geöffnet werden\n"
+
+#: src/unix/cmp.c:58
+#, c-format
+msgid "cmp: EOF on %s after byte %ld\n"
+msgstr "cmp: Ende von %s nach Byte %ld\n"
+
+#: src/unix/cmp.c:71
+#, c-format
+msgid "%s %s differ: byte %ld, line %ld\n"
+msgstr "%s %s unterscheiden sich: Byte %ld, Zeile %ld\n"
+
+#: src/unix/cmp.c:90
+msgid "Compare two files byte by byte"
+msgstr "Zwei Dateien Byte für Byte vergleichen"
+
+#: src/unix/cut.c:181
+#, c-format
+msgid "cut: cannot open %s\n"
+msgstr "cut: %s kann nicht geöffnet werden\n"
+
+#: src/unix/cut.c:190
+msgid "   cut -b LIST | -c LIST | -f LIST [-d DELIMITER] [-s] [file...]\n"
+msgstr "   cut -b LISTE | -c LISTE | -f LISTE [-d TRENNER] [-s] [Datei...]\n"
+
+#: src/unix/cut.c:194
+msgid "Print parts of each line (bytes, characters, fields)"
+msgstr "Teile jeder Zeile ausgeben (Bytes, Zeichen, Felder)"
+
 #: src/unix/dirname.c:24
 #, c-format
 msgid "dirname: a path is needed\n"
@@ -823,6 +880,44 @@ msgstr "dirname: ein Pfad wird benötigt\n"
 #: src/unix/dirname.c:56
 msgid "Strip the last component from a path"
 msgstr "Entfernt den letzten Teil eines Pfades"
+
+#: src/unix/env.c:77
+msgid "env: the command is too long\n"
+msgstr "env: der Befehl ist zu lang\n"
+
+#: src/unix/env.c:109
+msgid "Show the environment, or run a command with changes to it"
+msgstr "Die Umgebung anzeigen oder einen Befehl mit geänderter Umgebung ausführen"
+
+#: src/unix/env.c:138
+msgid "   which NAME...\n"
+msgstr "   which NAME...\n"
+
+#: src/unix/env.c:144
+#, c-format
+msgid "%s: shell built-in command\n"
+msgstr "%s: eingebauter Befehl der Shell\n"
+
+#: src/unix/env.c:155
+#, c-format
+msgid "which: no %s in PATH\n"
+msgstr "which: kein %s im PATH\n"
+
+#: src/unix/env.c:161
+msgid "Show what a command name runs"
+msgstr "Anzeigen, was ein Befehlsname ausführt"
+
+#: src/unix/env.c:185
+msgid "uname: cannot get the system's name\n"
+msgstr "uname: der Systemname ist nicht abrufbar\n"
+
+#: src/unix/env.c:222
+msgid "   uname [-a] [-s] [-n] [-r] [-m]\n"
+msgstr "   uname [-a] [-s] [-n] [-r] [-m]\n"
+
+#: src/unix/env.c:226
+msgid "Show the system's name, release and machine"
+msgstr "Name, Version und Maschine des Systems anzeigen"
 
 #: src/unix/head.c:64
 #, c-format
@@ -842,9 +937,102 @@ msgstr "hexdump: %s kann nicht geöffnet werden\n"
 msgid "Dump the contents of a file as hex and ASCII"
 msgstr "Gibt den Inhalt einer Datei hexadezimal und als ASCII aus"
 
+#: src/unix/ls.c:125
+#, c-format
+msgid "ls: cannot open %s\n"
+msgstr "ls: %s kann nicht geöffnet werden\n"
+
+#: src/unix/ls.c:147
+#, c-format
+msgid "ls: %lu more entries not shown\n"
+msgstr "ls: %lu weitere Einträge nicht angezeigt\n"
+
+#: src/unix/ls.c:170
+#, c-format
+msgid "ls: unknown option -%c\n"
+msgstr "ls: unbekannte Option -%c\n"
+
+#: src/unix/ls.c:171
+msgid "   ls [-l] [-a] [-1] [file or directory...]\n"
+msgstr "   ls [-l] [-a] [-1] [Datei oder Verzeichnis...]\n"
+
+#: src/unix/ls.c:179
+#, c-format
+msgid "ls: %s: not found\n"
+msgstr "ls: %s: nicht gefunden\n"
+
+#: src/unix/ls.c:207
+msgid "List directory contents (-l long, -a all, -1 one a line)"
+msgstr "Verzeichnisinhalt auflisten (-l ausführlich, -a alle, -1 einer pro Zeile)"
+
 #: src/unix/pwd.c:50
 msgid "Print the current working directory"
 msgstr "Gibt das aktuelle Arbeitsverzeichnis aus"
+
+#: src/unix/simple.c:25
+msgid "Do nothing, successfully"
+msgstr "Nichts tun, mit Erfolg"
+
+#: src/unix/simple.c:33
+msgid "Do nothing, unsuccessfully"
+msgstr "Nichts tun, ohne Erfolg"
+
+#: src/unix/simple.c:61
+msgid "Print a text (default y) again and again"
+msgstr "Einen Text (sonst y) immer wieder ausgeben"
+
+#: src/unix/simple.c:70
+msgid "   sleep NUMBER[s|m|h]...\n"
+msgstr "   sleep ZAHL[s|m|h]...\n"
+
+#: src/unix/simple.c:77 src/unix/simple.c:85
+#, c-format
+msgid "sleep: invalid time %s\n"
+msgstr "sleep: ungültige Zeit %s\n"
+
+#: src/unix/simple.c:97
+msgid "Wait a number of seconds (or m, h)"
+msgstr "Eine Anzahl Sekunden warten (oder m, h)"
+
+#: src/unix/simple.c:117
+#, c-format
+msgid "seq: not a whole number: %s\n"
+msgstr "seq: keine ganze Zahl: %s\n"
+
+#: src/unix/simple.c:123
+msgid "   seq [-s SEPARATOR] [FIRST [STEP]] LAST\n"
+msgstr "   seq [-s TRENNER] [ERSTE [SCHRITT]] LETZTE\n"
+
+#: src/unix/simple.c:134
+msgid "seq: the step must not be 0\n"
+msgstr "seq: der Schritt darf nicht 0 sein\n"
+
+#: src/unix/simple.c:146
+msgid "Print a sequence of numbers"
+msgstr "Eine Zahlenfolge ausgeben"
+
+#: src/unix/simple.c:210
+#, c-format
+msgid "rev: cannot open %s\n"
+msgstr "rev: %s kann nicht geöffnet werden\n"
+
+#: src/unix/simple.c:220
+msgid "Print every line backwards"
+msgstr "Jede Zeile rückwärts ausgeben"
+
+#: src/unix/simple.c:242
+#, c-format
+msgid "tee: too many files, %s left out\n"
+msgstr "tee: zu viele Dateien, %s ausgelassen\n"
+
+#: src/unix/simple.c:248
+#, c-format
+msgid "tee: cannot open %s\n"
+msgstr "tee: %s kann nicht geöffnet werden\n"
+
+#: src/unix/simple.c:270
+msgid "Copy the input to the output and into files (-a appends)"
+msgstr "Die Eingabe auf die Ausgabe und in Dateien kopieren (-a hängt an)"
 
 #: src/unix/sort.c:79
 #, c-format
@@ -877,6 +1065,18 @@ msgstr "touch: %s kann nicht angelegt oder aktualisiert werden\n"
 #: src/unix/touch.c:60
 msgid "Create a file or update its time to now"
 msgstr "Legt eine Datei an oder setzt ihre Zeit auf jetzt"
+
+#: src/unix/tr.c:145
+msgid "tr: invalid set\n"
+msgstr "tr: ungültige Zeichenmenge\n"
+
+#: src/unix/tr.c:184
+msgid "   tr [-d] [-s] SET1 [SET2]\n"
+msgstr "   tr [-d] [-s] MENGE1 [MENGE2]\n"
+
+#: src/unix/tr.c:188
+msgid "Translate, delete or squeeze characters"
+msgstr "Zeichen ersetzen, löschen oder Wiederholungen zusammenfassen"
 
 #: src/unix/uniq.c:59
 #, c-format

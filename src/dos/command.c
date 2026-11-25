@@ -133,6 +133,10 @@ static bool command_find(const char *name, char *path, size_t size) {
         return false;
 }
 
+bool command_which_file(const char *name, char *path, size_t size) {
+        return command_find(name, path, size);
+}
+
 static bool is_module(const char *path) {
         return has_ext(path, ".glm") || has_ext(path, ".hba") || has_ext(path, ".dev");
 }
@@ -315,6 +319,10 @@ static int execute_command(const char *line) {
         }
 
         cmd = find_applet(CASE_INSENSITVE, args.argv[0], commands);
+        if (cmd != NULL && cmd->words) {
+                command_args_free(&args);
+                command_args_split_words(line, &args);
+        }
         if (cmd != NULL) {
                 code = cmd->handler(args.argc, args.argv);
                 errno = code;
