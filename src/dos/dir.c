@@ -21,6 +21,7 @@ https://github.com/tproffen/DiffuseCode/blob/master/lib_f90/win32-glob.c
 */
 
 #include <ctype.h>
+#include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -92,6 +93,22 @@ struct file_entry {
  ***************************************************************************/
 static void dir_config_init(struct dir_config *config);
 static void dir_config_print(struct dir_config *config);
+/* a directory that could not be read while globbing (an empty drive, a
+ * read error): its name and errno, reported instead of an empty listing */
+static int dir_glob_errno;
+static char dir_glob_path[260];
+
+#if defined(_WIN32)
+#define DIR_GLOB_ERRFUNC NULL /* win32-glob.c takes no errfunc */
+#else
+static int dir_glob_error(const char *path, int err) {
+        dir_glob_errno = err;
+        snprintf(dir_glob_path, sizeof(dir_glob_path), "%s", path);
+        return 1;
+}
+#define DIR_GLOB_ERRFUNC dir_glob_error
+#endif
+
 static void dir_display_dir(struct dir_config *config, const char *dir_name,
                             struct command_glob *files2, int depth);
 static bool dir_parse_config(int argc, char *argv[], struct dir_config *config);
@@ -183,6 +200,13 @@ int command_dir(int argc, char *argv[]) {
 #else
         dir_display_dir(&config, ".", &config.global.files, 1);
 #endif
+        if (dir_glob_errno != 0) {
+                size_t n = strlen(dir_glob_path);
+                /* "A: No medium found", "A:\SUB: ..." */
+                fprintf(stderr, "%s%s %s\n", dir_glob_path,
+                        n && dir_glob_path[n - 1] == ':' ? "" : ":", strerror(dir_glob_errno));
+                return EXIT_FAILURE;
+        }
         return EXIT_SUCCESS;
 }
 
@@ -208,7 +232,13 @@ static void dir_display_dir(struct dir_config *config, const char *dir_name,
         memset(files, 0, sizeof(files));
         for (i = 0; i < files2->count; i++) {
                 glob_t globbuf = {0};
-                glob(files2->file[i], GLOB_DOOFFS | GLOB_NOSORT, NULL, &globbuf);
+                dir_glob_errno = 0;
+                if (glob(files2->file[i], GLOB_DOOFFS | GLOB_NOSORT, DIR_GLOB_ERRFUNC, &globbuf) ==
+                        GLOB_ABORTED &&
+                    dir_glob_errno != 0) {
+                        globfree(&globbuf);
+                        return;
+                }
                 for (j = 0; j != globbuf.gl_pathc; j++) {
                         const char *file_name = globbuf.gl_pathv[j];
                         requested_count++;

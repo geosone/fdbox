@@ -7,6 +7,7 @@ glob() with DOS semantics for GonWare, see glob.h.
 
 #include <ctype.h>
 #include <dirent.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
@@ -85,7 +86,6 @@ int glob(const char *pattern, int flags, int (*errfunc)(const char *epath, int e
         DIR *d;
         int r = 0;
 
-        (void)errfunc;
         if (!(flags & GLOB_APPEND)) {
                 if (!(flags & GLOB_DOOFFS))
                         g->gl_offs = 0;
@@ -123,7 +123,9 @@ int glob(const char *pattern, int flags, int (*errfunc)(const char *epath, int e
                             gdos_wildcard_match(name, e->d_name))
                                 r = add(g, &cap, dir, dirlen, e->d_name);
                 closedir(d);
-        } else if (flags & GLOB_ERR) {
+        } else if ((errfunc && errfunc(dirlen ? dir : ".", errno)) || (flags & GLOB_ERR)) {
+                /* a directory that cannot be read (an empty drive, an
+                   error): POSIX's errfunc says whether to stop */
                 return GLOB_ABORTED;
         }
         if (r)
